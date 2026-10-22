@@ -8,6 +8,7 @@ injected through environment variables instead of source control.
 from datetime import date
 from functools import lru_cache
 from typing import Literal
+from urllib.parse import quote
 
 from pydantic import Field, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
@@ -19,6 +20,13 @@ class Settings(BaseSettings):
     # General process identity and environment selection.
     app_name: str = "User Management API"
     environment: Literal["local", "test", "staging", "production"] = "local"
+    # These values are shared with Docker Compose for the local PostgreSQL
+    # container. They also allow the safe .env.example DATABASE_URL template
+    # to be resolved by the API process, because Pydantic does not expand
+    # ${VARIABLE} references inside dotenv values automatically.
+    postgres_db: str = "user_management"
+    postgres_user: str = "anthropic"
+    postgres_password: str | None = None
     # SQLAlchemy uses the asyncpg driver for PostgreSQL connections.
     database_url: str = "postgresql+asyncpg://user:password@localhost:5432/user_management"
 
@@ -67,8 +75,23 @@ class Settings(BaseSettings):
     )
 
     @model_validator(mode="after")
-    def validate_production_cookie(self) -> "Settings":
-        """Reject insecure cookie/rate-limit combinations before startup."""
+    def resolve_database_url_and_validate(self) -> "Settings":
+        """Resolve local dotenv templates and validate runtime safety rules."""
+
+        # Docker Compose expands this template itself, but Pydantic Settings
+        # intentionally leaves it literal. Resolve it here so Alembic and the
+        # FastAPI process connect with exactly the same local credentials.
+        if "${" in self.database_url:
+            if not self.postgres_password:
+                raise ValueError(
+                    "POSTGRES_PASSWORD is required when DATABASE_URL uses the local template"
+                )
+            encoded_user = quote(self.postgres_user, safe="")
+            encoded_password = quote(self.postgres_password, safe="")
+            self.database_url = (
+                f"postgresql+asyncpg://{encoded_user}:{encoded_password}"
+                f"@localhost:5432/{self.postgres_db}"
+            )
 
         if self.environment == "production" and not self.session_cookie_secure:
             raise ValueError("SESSION_COOKIE_SECURE must be true in production")

@@ -153,7 +153,9 @@ connection attributes:
 
 Keep DATABASE_URL and the Compose PostgreSQL settings in sync. The template
 uses the POSTGRES_* variables to build DATABASE_URL; Docker Compose provides
-the database service, while FastAPI still connects through DATABASE_URL.
+the database service, while FastAPI resolves the same template before
+connecting through DATABASE_URL. Pydantic does not expand dotenv references by
+itself, so this resolution is handled by `app/core/config.py`.
 
 ## First-time local setup
 

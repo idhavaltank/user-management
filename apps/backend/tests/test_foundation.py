@@ -34,6 +34,21 @@ def test_health_returns_ok_and_request_id() -> None:
     assert response.headers["X-RateLimit-Limit"] == "120"
 
 
+def test_local_database_template_uses_postgres_settings() -> None:
+    """The copied local dotenv template must resolve before database access."""
+
+    settings = build_settings(
+        database_url="postgresql+asyncpg://${POSTGRES_USER}:${POSTGRES_PASSWORD}@localhost:5432/${POSTGRES_DB}",
+        postgres_user="anthropic",
+        postgres_password="local-password",
+        postgres_db="user_management",
+    )
+
+    assert settings.database_url == (
+        "postgresql+asyncpg://anthropic:local-password@localhost:5432/user_management"
+    )
+
+
 def test_readiness_returns_dependency_error_when_database_is_unavailable() -> None:
     """Readiness must distinguish dependency failure from process liveness."""
 

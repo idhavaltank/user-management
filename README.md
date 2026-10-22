@@ -98,6 +98,10 @@ BOOTSTRAP_ADMIN_EMAIL=admin@example.com
 BOOTSTRAP_ADMIN_PASSWORD=<choose-a-long-local-admin-password>
 ```
 
+The template intentionally keeps `DATABASE_URL` in terms of the same
+`POSTGRES_*` variables used by Docker Compose. The backend resolves that local
+template automatically; do not replace it with the literal `${...}` values.
+
 The backend `.env` is ignored by Git. Never commit it or place real
 credentials in `.env.example`.
 
