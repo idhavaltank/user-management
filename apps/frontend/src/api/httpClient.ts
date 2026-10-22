@@ -5,7 +5,9 @@ export { ApiError } from './errors';
 
 type ErrorResponse = components['schemas']['ErrorResponse'];
 
-export const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://localhost:8000').replace(/\/$/, '');
+// Keep the local fallback on the same host as Vite so SameSite cookies are
+// retained when the app is opened at http://127.0.0.1:3001.
+export const API_BASE_URL = (import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000').replace(/\/$/, '');
 
 const UNSAFE_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
 
