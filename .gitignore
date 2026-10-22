@@ -1,0 +1,33 @@
+# Root dependency and build output.
+node_modules/
+dist/
+build/
+coverage/
+.nx/
+.cache/
+
+# Local environment files and secrets.
+.env
+.env.*
+!.env.example
+apps/frontend/.env
+apps/backend/.env
+
+# Frontend tooling output.
+apps/frontend/playwright-report/
+apps/frontend/test-results/
+apps/frontend/.vite/
+
+# Python environments and caches.
+apps/backend/.venv/
+apps/backend/__pycache__/
+apps/backend/**/__pycache__/
+apps/backend/.pytest_cache/
+apps/backend/.ruff_cache/
+*.py[cod]
+
+# Editor and operating-system files.
+.DS_Store
+.idea/
+.vscode/*
+!.vscode/extensions.json

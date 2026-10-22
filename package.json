@@ -1,0 +1,44 @@
+{
+  "name": "user-management-monorepo",
+  "private": true,
+  "engines": {
+    "node": ">=20.19.0"
+  },
+  "workspaces": [
+    "apps/frontend"
+  ],
+  "scripts": {
+    "dev": "npm run dev:frontend",
+    "dev:frontend": "nx run frontend:serve",
+    "dev:backend": "nx run backend:serve",
+    "dev:all": "nx run-many --target=serve --projects=frontend,backend --parallel=2",
+    "infra:up": "docker compose --env-file apps/backend/.env -f apps/backend/docker-compose.yml up -d postgres redis",
+    "infra:down": "docker compose --env-file apps/backend/.env -f apps/backend/docker-compose.yml down",
+    "infra:logs": "docker compose --env-file apps/backend/.env -f apps/backend/docker-compose.yml logs -f postgres redis",
+    "infra:reset": "docker compose --env-file apps/backend/.env -f apps/backend/docker-compose.yml down -v",
+    "backend:install": "cd apps/backend && uv sync --dev",
+    "frontend:install": "npm install --workspace user-management-frontend-ts",
+    "db:migrate": "nx run backend:migrate",
+    "db:current": "nx run backend:migration-current",
+    "db:history": "nx run backend:migration-history",
+    "generate:api-types": "nx run frontend:generate-api-types",
+    "check:generated": "./scripts/check_generated.sh",
+    "validate:api": "./scripts/validate_api_contract.sh",
+    "build": "nx run frontend:build",
+    "build:frontend": "nx run frontend:build",
+    "test": "nx run-many --target=test --projects=frontend,backend --parallel=false",
+    "test:frontend": "nx run frontend:test",
+    "test:backend": "nx run backend:test",
+    "test:e2e": "nx run frontend:test:e2e",
+    "lint": "nx run-many --target=lint --projects=frontend,backend --parallel=false",
+    "lint:frontend": "nx run frontend:lint",
+    "lint:backend": "nx run backend:lint",
+    "typecheck": "nx run frontend:typecheck",
+    "validate": "nx run backend:check && nx run frontend:typecheck && nx run frontend:test",
+    "graph": "nx graph",
+    "reset:nx": "nx reset"
+  },
+  "devDependencies": {
+    "nx": "19.3.1"
+  }
+}
