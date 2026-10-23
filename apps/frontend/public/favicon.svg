@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-labelledby="title">
+  <title id="title">User Management</title>
+  <rect width="64" height="64" rx="14" fill="#16a34a" />
+  <circle cx="32" cy="24" r="10" fill="#ffffff" />
+  <path d="M14 52c1.8-9.3 8.3-14 18-14s16.2 4.7 18 14" fill="#ffffff" />
+</svg>

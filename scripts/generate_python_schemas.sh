@@ -10,8 +10,7 @@ uvx --from datamodel-code-generator datamodel-codegen \
   --output apps/backend/app/generated/schemas.py \
   --output-model-type pydantic_v2.BaseModel \
   --use-annotated \
-  --strict-refs \
-  --formatters builtin
+  --strict-refs
 
 # datamodel-code-generator includes the current timestamp in its header. Remove
 # it so the generated file is reproducible when the contract has not changed.

@@ -53,6 +53,10 @@ class Settings(BaseSettings):
     session_cookie_secure: bool = False
     session_cookie_same_site: Literal["lax", "strict", "none"] = "lax"
     session_ttl_seconds: int = Field(default=3600, ge=300, le=2_592_000)
+    password_reset_ttl_seconds: int = Field(default=1800, ge=300, le=86_400)
+    email_verification_ttl_seconds: int = Field(default=86_400, ge=900, le=604_800)
+    login_max_attempts: int = Field(default=5, ge=1, le=20)
+    login_lockout_seconds: int = Field(default=900, ge=60, le=86_400)
 
     # Rate limits are local-memory by default and Redis-backed when configured.
     rate_limit_enabled: bool = True

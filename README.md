@@ -252,15 +252,24 @@ The backend exposes:
 - `POST /api/v1/auth/logout`
 - `GET /api/v1/auth/me`
 - `GET /api/v1/auth/csrf`
-- `GET /api/v1/users`
-- `POST /api/v1/users`
-- `GET /api/v1/users/{userId}`
-- `PATCH /api/v1/users/{userId}`
-- `DELETE /api/v1/users/{userId}`
+- `GET /api/v1/organizations`
+- Organization-scoped user CRUD, lifecycle, bulk, CSV, audit, roles, teams, invitations, notifications, settings, jobs, and API keys
+- Organization administration is available at `/admin` for settings, roles and permissions, teams, invitations, audit history, API keys, and CSV/job operations.
+- Session password/recovery/verification flows plus local TOTP enrollment
+
+The organization-scoped routes are the canonical frontend path. The original
+`/api/v1/users` CRUD routes remain as a compatibility adapter for older clients.
 
 Authentication uses an opaque HttpOnly session cookie. Unsafe requests require
 the CSRF token returned by the login or CSRF endpoint. User mutations require
 an administrator session, and deleted users are soft-deleted.
+
+In local/test environments, password-reset, email-verification, and invitation
+tokens are handed to an in-memory delivery adapter. Raw tokens are never
+returned by HTTP routes, persisted in plaintext, or logged. Non-local startup
+fails closed until a provider-backed delivery adapter is configured. Scoped API
+keys are accepted only on organization read routes and are never accepted by
+browser login, logout, CSRF, or session-management routes.
 
 ## Database and Docker lifecycle
 
@@ -291,6 +300,7 @@ npm run typecheck
 npm run test
 npm run build
 npm run check:generated
+npm run validate:full
 ```
 
 For a focused backend validation:

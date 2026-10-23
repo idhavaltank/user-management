@@ -6,6 +6,10 @@ import { useAppSelector } from './redux/hooks';
 
 import LoginPage from './pages/LoginPage';
 import UserPage from './pages/UserPage';
+import DashboardPage from './pages/DashboardPage';
+import SecurityPage from './pages/SecurityPage';
+import NotificationPreferencesPage from './pages/NotificationPreferencesPage';
+import OrganizationAdminPage from './pages/OrganizationAdminPage';
 
 const AuthLoading = (): JSX.Element => (
   <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh' }}>
@@ -34,11 +38,15 @@ const Router = (): ReactElement | null =>
       path: '/',
       element: <ProtectedLayout />,
       children: [
-        { element: <Navigate to="/user" />, index: true },
+        { element: <Navigate to="/dashboard" />, index: true },
+        { path: 'dashboard', element: <DashboardPage /> },
         { path: 'user', element: <UserPage /> },
+        { path: 'security', element: <SecurityPage /> },
+        { path: 'notifications', element: <NotificationPreferencesPage /> },
+        { path: 'admin', element: <OrganizationAdminPage /> },
       ],
     },
-    { path: '*', element: <Navigate to="/user" replace /> },
+    { path: '*', element: <Navigate to="/dashboard" replace /> },
   ]);
 
 export default Router;

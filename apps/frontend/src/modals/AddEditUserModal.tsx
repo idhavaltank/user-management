@@ -38,9 +38,10 @@ type AddEditUserModalProps = {
   handleClose: ModalClose;
   currentUser: User | null;
   onSaved?: () => void;
+  organizationId?: string;
 };
 
-const AddEditUserModal = ({ open, handleClose, currentUser, onSaved }: AddEditUserModalProps): JSX.Element => {
+const AddEditUserModal = ({ open, handleClose, currentUser, onSaved, organizationId }: AddEditUserModalProps): JSX.Element => {
   const userId = currentUser?.id || '';
   // local state
   const [isLoading, setIsLoading] = useState(false);
@@ -130,7 +131,7 @@ const AddEditUserModal = ({ open, handleClose, currentUser, onSaved }: AddEditUs
     };
 
     try {
-      await saveUser(dispatch, userId, userPayload);
+      await saveUser(dispatch, userId, userPayload, organizationId);
       onSaved?.();
       setCustomHobby(false);
       handleClose({ key: 'addEditModal' });

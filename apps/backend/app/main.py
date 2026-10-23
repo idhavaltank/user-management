@@ -22,10 +22,16 @@ from starlette.middleware.trustedhost import TrustedHostMiddleware
 
 from app.api.auth import router as auth_router
 from app.api.health import router as health_router
+from app.api.jobs import router as jobs_router
+from app.api.organization_features import router as organization_features_router
+from app.api.organization_users import router as organization_users_router
+from app.api.organizations import router as organizations_router
+from app.api.security_features import router as security_features_router
 from app.api.users import router as users_router
 from app.core.bootstrap import ensure_bootstrap_admin
 from app.core.config import Settings, get_settings
 from app.core.database import check_database, create_engine, create_session_factory
+from app.core.delivery import create_delivery_adapter
 from app.core.logging import configure_logging
 from app.core.rate_limit import RateLimitMiddleware, RedisRateLimitStore
 from app.core.request_id import RequestIdMiddleware
@@ -118,7 +124,14 @@ def create_app(
     app.state.engine = engine
     app.state.session_factory = session_factory
     app.state.redis = redis_client
+    # Local MFA adapter state is intentionally process-local. Production must
+    # replace it with encrypted persistent storage and a shared challenge store.
+    app.state.local_mfa = {}
     app.state.database_check = database_check or (lambda: check_database(engine))
+    # Token delivery is an explicit dependency. Local/test use an in-memory
+    # sink; non-local environments fail closed until a provider adapter is
+    # configured instead of silently dropping security messages.
+    app.state.delivery = create_delivery_adapter(app_settings)
 
     # Convert FastAPI/Starlette HTTP errors into the documented error shape.
     @app.exception_handler(StarletteHTTPException)
@@ -202,6 +215,11 @@ def create_app(
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(users_router)
+    app.include_router(organization_users_router)
+    app.include_router(organizations_router)
+    app.include_router(organization_features_router)
+    app.include_router(jobs_router)
+    app.include_router(security_features_router)
     return app
 
 

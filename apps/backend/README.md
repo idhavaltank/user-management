@@ -10,7 +10,8 @@ TypeScript frontend.
 
 ## Responsibilities
 
-- Expose health, readiness, authentication, and user-management endpoints.
+- Expose health, readiness, authentication, organization, user-management, and
+  operational endpoints.
 - Validate request payloads and return consistent API error responses.
 - Store users and browser sessions in PostgreSQL.
 - Hash passwords before persistence; raw passwords are never stored.
@@ -19,6 +20,9 @@ TypeScript frontend.
 - Restrict user mutations to administrators.
 - Soft-delete user records instead of physically removing them.
 - Apply request and login rate limits.
+- Enforce organization membership and permission checks on tenant-scoped routes.
+- Provide bounded bulk/import/export job records, audit logs, notifications,
+  invitations, teams, API-key management, and local MFA primitives.
 
 ## Request flow
 
@@ -48,7 +52,7 @@ disabled.
 backend/
 ├── app/
 │   ├── api/             # FastAPI routers and endpoint contracts
-│   ├── core/            # Settings, database, auth, security, middleware
+│   ├── core/            # Settings, database, auth, delivery, security, middleware
 │   ├── models/          # SQLAlchemy ORM models
 │   ├── services/        # Business rules and transactions
 │   └── generated/       # Generated Pydantic schemas; do not edit manually
@@ -135,6 +139,12 @@ app/core/config.py. Environment values override code defaults.
 | BOOTSTRAP_ADMIN_NAME       | Display name for the bootstrap administrator              |
 | BOOTSTRAP_ADMIN_BIRTH_DATE | Optional bootstrap administrator birth date               |
 
+`ENVIRONMENT=local` selects the in-memory delivery sink for password-reset,
+email-verification, and invitation tokens. Raw values are available only to
+the local adapter object used by tests; they are not returned by API routes or
+written to logs. Staging/production startup fails closed until an approved
+provider-backed delivery adapter is supplied.
+
 The .env file is ignored by apps/backend/.gitignore. Never commit passwords,
 connection strings containing passwords, tokens, or production secrets.
 
@@ -201,8 +211,11 @@ uv run alembic upgrade head
 uv run alembic current
 ```
 
-The initial migration creates the users table, session table, indexes,
-constraints, timestamps, soft-delete fields, and required enum values.
+The migration chain currently ends at `20261023_0007`. It creates the users and
+session foundation, lifecycle/token tables, organizations/roles/permissions,
+teams, invitations, notifications/preferences, audit logs, API-key metadata,
+durable jobs, and import previews. It also backfills the deterministic local
+organization and memberships for the existing baseline users.
 
 ### 4. Start FastAPI
 
@@ -252,11 +265,24 @@ session.
 | POST   | /api/v1/auth/logout    | Revoke current session         | Session + CSRF |
 | GET    | /api/v1/auth/me        | Return current user            | Session        |
 | GET    | /api/v1/auth/csrf      | Issue/rotate CSRF token        | Session        |
-| GET    | /api/v1/users          | Paginated/searchable user list | Admin          |
-| POST   | /api/v1/users          | Create user                    | Admin + CSRF   |
-| GET    | /api/v1/users/{userId} | Read one active user           | Admin          |
-| PATCH  | /api/v1/users/{userId} | Update user                    | Admin + CSRF   |
-| DELETE | /api/v1/users/{userId} | Soft-delete user               | Admin + CSRF   |
+| GET    | /api/v1/organizations | Active organizations           | Session        |
+| GET    | /api/v1/organizations/{organizationId}/users | Tenant user list | Membership + permission |
+| POST   | /api/v1/organizations/{organizationId}/users | Create pending member | Permission + CSRF |
+| PATCH  | /api/v1/organizations/{organizationId}/users/{userId} | Update profile | Permission + CSRF |
+| DELETE | /api/v1/organizations/{organizationId}/users/{userId} | Soft-delete member | Permission + CSRF |
+| PATCH  | /api/v1/organizations/{organizationId}/users/{userId}/status | Lifecycle transition | Permission + CSRF |
+| POST   | /api/v1/organizations/{organizationId}/users/import/preview | Validate CSV | Permission + CSRF |
+| POST   | /api/v1/organizations/{organizationId}/users/import/commit | Commit preview | Permission + CSRF |
+| GET    | /api/v1/organizations/{organizationId}/dashboard | Dashboard counts | Membership + permission |
+| GET    | /api/v1/organizations/{organizationId}/audit-logs | Paginated audit events | Audit permission |
+| GET    | /api/v1/organizations/{organizationId}/jobs | Paginated job history | Membership + permission |
+| GET    | /api/v1/organizations/{organizationId}/jobs/{jobId} | Job status | Membership + permission |
+| GET/PATCH | /api/v1/organizations/{organizationId}/notifications/preferences | Notification settings | Membership |
+| POST   | /api/v1/organizations/{organizationId}/api-keys | Create scoped key | Settings + CSRF |
+| POST   | /api/v1/auth/mfa/enroll | Begin local TOTP enrollment | Session + CSRF |
+
+The original `/api/v1/users` CRUD routes remain available as a compatibility
+adapter for older clients. New UI code should use organization-scoped routes.
 
 List controls supported by GET /api/v1/users include page, pageSize, search,
 sort, and order. The supported sort fields are name, email, birthDate,
@@ -272,6 +298,11 @@ createdAt, and updatedAt.
 5. FastAPI validates the session, expiry, revocation state, role, and CSRF
    token before mutations.
 6. Logout revokes the server-side session and clears the browser cookie.
+
+When no browser session cookie is present, organization read routes may accept
+an `Authorization: Bearer umk_<prefix>_<secret>` API key if its stored scope
+matches the requested permission. API keys cannot call login, logout, CSRF,
+password/session management, or unsafe mutation routes.
 
 Raw session tokens and CSRF tokens are not stored in PostgreSQL. Only hashes
 and session metadata are persisted.

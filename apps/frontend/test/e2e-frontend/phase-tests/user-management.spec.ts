@@ -5,7 +5,15 @@ test('admin can create, refresh, search, and delete a user through the API-backe
   const consoleErrors: string[] = [];
   page.on('console', (message) => {
     if (message.type() === 'error' && !message.text().includes('401 (Unauthorized)')) {
-      consoleErrors.push(message.text());
+      consoleErrors.push(`${message.text()} @ ${message.location().url}`);
+    }
+  });
+  page.on('requestfailed', (request) => {
+    consoleErrors.push(`REQUEST FAILED: ${request.url()} (${request.failure()?.errorText ?? 'unknown'})`);
+  });
+  page.on('response', (response) => {
+    if (response.status() === 404) {
+      consoleErrors.push(`HTTP 404: ${response.url()}`);
     }
   });
 
@@ -22,9 +30,9 @@ test('admin can create, refresh, search, and delete a user through the API-backe
   expect(loginResponse.status()).toBe(200);
 
   const listResponsePromise = page.waitForResponse(
-    (response) => response.url().includes('/api/v1/users') && response.request().method() === 'GET'
+    (response) => response.url().includes('/api/v1/organizations/') && response.url().includes('/users') && response.request().method() === 'GET'
   );
-  await expect(page.getByRole('heading', { name: 'User Management' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'User Management', level: 4 })).toBeVisible();
   const listResponse = await listResponsePromise;
   expect(listResponse.status()).toBe(200);
 
@@ -40,7 +48,7 @@ test('admin can create, refresh, search, and delete a user through the API-backe
   await page.getByRole('radio', { name: 'Men', exact: true }).check();
 
   const createResponsePromise = page.waitForResponse(
-    (response) => response.url().endsWith('/api/v1/users') && response.request().method() === 'POST'
+    (response) => response.url().includes('/api/v1/organizations/') && response.url().endsWith('/users') && response.request().method() === 'POST'
   );
   await page.getByRole('button', { name: 'Create' }).click();
   const createResponse = await createResponsePromise;
@@ -58,7 +66,7 @@ test('admin can create, refresh, search, and delete a user through the API-backe
   await page.getByLabel('Full Name').fill(`${userName} Updated`);
 
   const updateResponsePromise = page.waitForResponse(
-    (response) => response.url().includes('/api/v1/users/') && response.request().method() === 'PATCH'
+    (response) => response.url().includes('/api/v1/organizations/') && response.url().includes('/users/') && response.request().method() === 'PATCH'
   );
   await page.getByRole('button', { name: 'Save' }).click();
   const updateResponse = await updateResponsePromise;
@@ -70,7 +78,7 @@ test('admin can create, refresh, search, and delete a user through the API-backe
   await page.getByRole('menuitem', { name: /Delete/ }).click();
 
   const deleteResponsePromise = page.waitForResponse(
-    (response) => response.url().includes('/api/v1/users/') && response.request().method() === 'DELETE'
+    (response) => response.url().includes('/api/v1/organizations/') && response.url().includes('/users/') && response.request().method() === 'DELETE'
   );
   await page.getByRole('button', { name: 'YES' }).click();
   const deleteResponse = await deleteResponsePromise;

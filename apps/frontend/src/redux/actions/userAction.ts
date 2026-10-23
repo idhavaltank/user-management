@@ -1,15 +1,19 @@
 import type { Dispatch } from 'redux';
 import {
   createUser as apiCreateUser,
+  createOrganizationUser,
+  deleteOrganizationUser,
   deleteUser as apiDeleteUser,
   getApiErrorMessage,
   listUsers,
+  listOrganizationUsers,
   type ListUsersQuery,
   type User,
   type UserCreateRequest,
   type UserListResponse,
   type UserUpdateRequest,
   updateUser as apiUpdateUser,
+  updateOrganizationUser,
 } from '../../api/client';
 import { USER_DELETED, USER_SAVED, USERS_FAILED, USERS_LOADED, USERS_REQUESTED } from '../Types';
 import type { UserAction } from '../reducers/userReducer';
@@ -26,12 +30,19 @@ export const usersFailed = (error: string): UserAction => ({ type: USERS_FAILED,
 export const fetchUsers = async (
   dispatch: Dispatch<UserAction>,
   query: ListUsersQuery = {},
-  signal?: AbortSignal
+  signal?: AbortSignal,
+  organizationId?: string
 ): Promise<void> => {
   dispatch(usersRequested(query));
 
   try {
-    dispatch(usersLoaded(await listUsers(query, signal)));
+    dispatch(
+      usersLoaded(
+        organizationId
+          ? await listOrganizationUsers(organizationId, query, signal)
+          : await listUsers(query, signal)
+      )
+    );
   } catch (error) {
     if (error instanceof Error && error.name === 'AbortError') return;
     dispatch(usersFailed(getApiErrorMessage(error)));
@@ -42,12 +53,17 @@ export const fetchUsers = async (
 export const saveUser = async (
   dispatch: Dispatch<UserAction>,
   userId: string,
-  payload: UserCreateRequest | UserUpdateRequest
+  payload: UserCreateRequest | UserUpdateRequest,
+  organizationId?: string
 ): Promise<User> => {
   try {
-    const user = userId
-      ? await apiUpdateUser(userId, payload as UserUpdateRequest)
-      : await apiCreateUser(payload as UserCreateRequest);
+    const user = organizationId
+      ? userId
+        ? await updateOrganizationUser(organizationId, userId, payload as UserUpdateRequest)
+        : await createOrganizationUser(organizationId, payload as UserCreateRequest)
+      : userId
+        ? await apiUpdateUser(userId, payload as UserUpdateRequest)
+        : await apiCreateUser(payload as UserCreateRequest);
     dispatch(userSaved(user));
     return user;
   } catch (error) {
@@ -56,9 +72,14 @@ export const saveUser = async (
   }
 };
 
-export const deleteUser = async (dispatch: Dispatch<UserAction>, userId: string): Promise<void> => {
+export const deleteUser = async (
+  dispatch: Dispatch<UserAction>,
+  userId: string,
+  organizationId?: string
+): Promise<void> => {
   try {
-    await apiDeleteUser(userId);
+    if (organizationId) await deleteOrganizationUser(organizationId, userId);
+    else await apiDeleteUser(userId);
     dispatch(userDeleted(userId));
   } catch (error) {
     dispatch(usersFailed(getApiErrorMessage(error)));

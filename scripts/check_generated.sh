@@ -13,8 +13,7 @@ uvx --from datamodel-code-generator datamodel-codegen \
   --output "$TEMP_DIR/schemas.py" \
   --output-model-type pydantic_v2.BaseModel \
   --use-annotated \
-  --strict-refs \
-  --formatters builtin
+  --strict-refs
 sed -i '/^#   timestamp:/d' "$TEMP_DIR/schemas.py"
 sed -i '/^#   filename:/a # This file is generated from the OpenAPI contract; do not edit manually.' "$TEMP_DIR/schemas.py"
 cmp --silent "$TEMP_DIR/schemas.py" apps/backend/app/generated/schemas.py
