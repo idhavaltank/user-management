@@ -35,6 +35,7 @@
     "lint:backend": "nx run backend:lint",
     "typecheck": "nx run frontend:typecheck",
     "validate": "nx run backend:check && nx run frontend:typecheck && nx run frontend:test",
+    "validate:full": "npm run validate:api && npm run check:generated && npm run lint && npm run typecheck && npm run test && npm run build",
     "graph": "nx graph",
     "reset:nx": "nx reset"
   },

@@ -10,6 +10,13 @@ tags:
   - name: Health
   - name: Authentication
   - name: Users
+  - name: Organizations
+  - name: Roles
+  - name: Permissions
+  - name: Audit
+  - name: Notifications
+  - name: Jobs
+  - name: Integrations
 paths:
   /health:
     get:
@@ -131,6 +138,421 @@ paths:
           $ref: "#/components/responses/Unauthorized"
         "429":
           $ref: "#/components/responses/TooManyRequests"
+
+  /api/v1/auth/password/change:
+    post:
+      tags: [Authentication]
+      operationId: changePassword
+      summary: Change the authenticated user's password
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordChangeRequest"
+      responses:
+        "204":
+          description: Password changed and other sessions revoked
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/auth/password/forgot:
+    post:
+      tags: [Authentication]
+      operationId: requestPasswordReset
+      summary: Request a password reset without revealing account existence
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetRequest"
+      responses:
+        "202":
+          description: Reset request accepted without account enumeration
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcceptedResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/auth/password/reset:
+    post:
+      tags: [Authentication]
+      operationId: resetPassword
+      summary: Consume a one-time password reset token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PasswordResetConsumeRequest"
+      responses:
+        "204":
+          description: Password reset completed
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/auth/email/verify:
+    post:
+      tags: [Authentication]
+      operationId: verifyEmail
+      summary: Verify an email address with a one-time body token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TokenConsumeRequest"
+      responses:
+        "204":
+          description: Email verified
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/auth/sessions:
+    get:
+      tags: [Authentication]
+      operationId: listSessions
+      summary: List active sessions without raw tokens
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: Active session metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SessionListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      tags: [Authentication]
+      operationId: revokeOtherSessions
+      summary: Revoke every session except the current one
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "204":
+          description: Other sessions revoked
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/auth/sessions/{sessionId}:
+    parameters:
+      - $ref: "#/components/parameters/SessionId"
+    delete:
+      tags: [Authentication]
+      operationId: revokeSession
+      summary: Revoke one active session
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "204":
+          description: Session revoked
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/users:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Users]
+      operationId: listOrganizationUsers
+      summary: List users visible in one organization
+      security:
+        - sessionCookie: []
+          apiKey: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/Sort"
+        - $ref: "#/components/parameters/Order"
+        - $ref: "#/components/parameters/UserStatusFilter"
+        - $ref: "#/components/parameters/RoleFilter"
+      responses:
+        "200":
+          description: Organization-scoped paginated user list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      tags: [Users]
+      operationId: createOrganizationUser
+      summary: Create a pending user profile in an organization
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserCreateRequest"
+      responses:
+        "201":
+          description: User profile created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/users/{userId}:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - $ref: "#/components/parameters/UserId"
+    get:
+      tags: [Users]
+      operationId: getOrganizationUser
+      summary: Get one organization-scoped user
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: User profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    patch:
+      tags: [Users]
+      operationId: updateOrganizationUser
+      summary: Update an organization-scoped user profile
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserUpdateRequest"
+      responses:
+        "200":
+          description: User updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      tags: [Users]
+      operationId: deleteOrganizationUser
+      summary: Soft-delete an organization-scoped user
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "204":
+          description: User soft-deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/users/{userId}/restore:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - $ref: "#/components/parameters/UserId"
+    post:
+      tags: [Users]
+      operationId: restoreOrganizationUser
+      summary: Restore a soft-deleted user
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RestoreUserRequest"
+      responses:
+        "200":
+          description: User restored
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/users/{userId}/status:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - $ref: "#/components/parameters/UserId"
+    patch:
+      tags: [Users]
+      operationId: updateOrganizationUserStatus
+      summary: Change a user's lifecycle status
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserStatusUpdateRequest"
+      responses:
+        "200":
+          description: User status updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
 
   /api/v1/users:
     get:
@@ -272,6 +694,1844 @@ paths:
         "429":
           $ref: "#/components/responses/TooManyRequests"
 
+  /api/v1/organizations/{organizationId}/users/{userId}/activity:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - $ref: "#/components/parameters/UserId"
+    get:
+      tags: [Audit]
+      operationId: getUserActivity
+      summary: Get authorized activity for one user
+      security:
+        - sessionCookie: []
+          apiKey: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: User activity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditLogListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/users/bulk/status:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    post:
+      tags: [Users, Jobs]
+      operationId: bulkUpdateUserStatus
+      summary: Queue a bounded bulk status change
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkUserStatusRequest"
+      responses:
+        "202":
+          description: Bulk job accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/users/bulk/delete:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    post:
+      tags: [Users, Jobs]
+      operationId: bulkDeleteUsers
+      summary: Queue a bounded bulk soft-delete
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkUserIdsRequest"
+      responses:
+        "202":
+          description: Bulk job accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/users/bulk/restore:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    post:
+      tags: [Users, Jobs]
+      operationId: bulkRestoreUsers
+      summary: Queue a bounded bulk restore
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkUserIdsRequest"
+      responses:
+        "202":
+          description: Bulk job accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/users/bulk/roles:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    post:
+      tags: [Users, Roles, Jobs]
+      operationId: bulkAssignUserRole
+      summary: Queue a bounded bulk role assignment
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BulkUserRoleRequest"
+      responses:
+        "202":
+          description: Bulk job accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/users/import/preview:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    post:
+      tags: [Users, Jobs]
+      operationId: previewUserImport
+      summary: Validate a bounded CSV user import without mutation
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/UserImportRequest"
+      responses:
+        "200":
+          description: Import validation results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ImportPreviewResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/users/import/commit:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    post:
+      tags: [Users, Jobs]
+      operationId: commitUserImport
+      summary: Commit a previously validated CSV import
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ImportCommitRequest"
+      responses:
+        "202":
+          description: Import job accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/users/export:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Users, Jobs]
+      operationId: exportUsers
+      summary: Queue an authorized filtered user export
+      security:
+        - sessionCookie: []
+          apiKey: []
+      parameters:
+        - $ref: "#/components/parameters/Search"
+        - $ref: "#/components/parameters/UserStatusFilter"
+        - $ref: "#/components/parameters/RoleFilter"
+      responses:
+        "202":
+          description: Export job accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/jobs/{jobId}:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - $ref: "#/components/parameters/JobId"
+    get:
+      tags: [Jobs]
+      operationId: getJob
+      summary: Read an authorized job status
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: Job status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/jobs:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Jobs]
+      operationId: listJobs
+      summary: List authorized organization jobs
+      security:
+        - sessionCookie: []
+          apiKey: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Organization jobs
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/jobs/{jobId}/cancel:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - $ref: "#/components/parameters/JobId"
+    post:
+      tags: [Jobs]
+      operationId: cancelJob
+      summary: Cancel an authorized queued or running job
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "200":
+          description: Job cancellation accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/JobResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/users/{userId}/roles:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - $ref: "#/components/parameters/UserId"
+    get:
+      tags: [Roles]
+      operationId: listUserRoles
+      summary: List effective and assigned roles for a user
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: User roles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      tags: [Roles]
+      operationId: assignUserRole
+      summary: Assign an organization role to a user
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleAssignmentRequest"
+      responses:
+        "201":
+          description: Role assignment created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleAssignment"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/users/{userId}/roles/{roleId}:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - $ref: "#/components/parameters/UserId"
+      - $ref: "#/components/parameters/RoleId"
+    delete:
+      tags: [Roles]
+      operationId: removeUserRole
+      summary: Remove an organization role from a user
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "204":
+          description: Role assignment removed
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/dashboard:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Organizations]
+      operationId: getOrganizationDashboard
+      summary: Read authorized dashboard aggregates
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: Dashboard aggregates
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DashboardResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/settings:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Organizations]
+      operationId: getOrganizationSettings
+      summary: Read organization settings
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: Organization settings
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizationSettings"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    patch:
+      tags: [Organizations]
+      operationId: updateOrganizationSettings
+      summary: Update organization settings
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrganizationSettingsUpdateRequest"
+      responses:
+        "200":
+          description: Settings updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizationSettings"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/permissions:
+    get:
+      tags: [Permissions]
+      operationId: listPermissions
+      summary: List the global permission catalog
+      responses:
+        "200":
+          description: Permission catalog
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PermissionListResponse"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/audit-logs:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Audit]
+      operationId: listAuditLogs
+      summary: List immutable organization audit entries
+      security:
+        - sessionCookie: []
+          apiKey: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+        - name: eventType
+          in: query
+          schema:
+            type: string
+            maxLength: 120
+        - name: from
+          in: query
+          schema:
+            type: string
+            format: date-time
+        - name: to
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Paginated audit entries
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuditLogListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations:
+    get:
+      tags: [Organizations]
+      operationId: listOrganizations
+      summary: List organizations available to the caller
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: Available organizations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OrganizationListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      tags: [Organizations]
+      operationId: createOrganization
+      summary: Create an organization
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrganizationCreateRequest"
+      responses:
+        "201":
+          description: Organization created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Organization"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Organizations]
+      operationId: getOrganization
+      summary: Read organization metadata
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: Organization metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Organization"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    patch:
+      tags: [Organizations]
+      operationId: updateOrganization
+      summary: Update organization metadata
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OrganizationUpdateRequest"
+      responses:
+        "200":
+          description: Organization updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Organization"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/members:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Organizations]
+      operationId: listOrganizationMembers
+      summary: List organization members
+      security:
+        - sessionCookie: []
+          apiKey: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Organization members
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MemberListResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      tags: [Organizations]
+      operationId: addOrganizationMember
+      summary: Add an existing user to an organization
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberCreateRequest"
+      responses:
+        "201":
+          description: Membership created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/members/{userId}:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - $ref: "#/components/parameters/UserId"
+    patch:
+      tags: [Organizations]
+      operationId: updateOrganizationMember
+      summary: Change membership role or status
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MemberUpdateRequest"
+      responses:
+        "200":
+          description: Membership updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Member"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      tags: [Organizations]
+      operationId: removeOrganizationMember
+      summary: Remove a user from an organization
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "204":
+          description: Membership removed
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/teams:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Organizations]
+      operationId: listTeams
+      summary: List organization teams
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: Teams
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TeamListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      tags: [Organizations]
+      operationId: createTeam
+      summary: Create an organization team
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeamCreateRequest"
+      responses:
+        "201":
+          description: Team created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Team"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/teams/{teamId}:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - $ref: "#/components/parameters/TeamId"
+    patch:
+      tags: [Organizations]
+      operationId: updateTeam
+      summary: Update a team
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TeamUpdateRequest"
+      responses:
+        "200":
+          description: Team updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Team"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      tags: [Organizations]
+      operationId: deleteTeam
+      summary: Delete a team
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "204":
+          description: Team deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/roles:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Roles]
+      operationId: listOrganizationRoles
+      summary: List organization roles and permissions
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: Organization roles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RoleListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      tags: [Roles]
+      operationId: createOrganizationRole
+      summary: Create a managed organization role
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleCreateRequest"
+      responses:
+        "201":
+          description: Role created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Role"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/roles/{roleId}:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - $ref: "#/components/parameters/RoleId"
+    patch:
+      tags: [Roles]
+      operationId: updateOrganizationRole
+      summary: Update role permissions
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RoleUpdateRequest"
+      responses:
+        "200":
+          description: Role updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Role"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    delete:
+      tags: [Roles]
+      operationId: deleteOrganizationRole
+      summary: Delete an unassigned organization role
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "204":
+          description: Role deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/invitations:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Organizations]
+      operationId: listInvitations
+      summary: List authorized organization invitations
+      security:
+        - sessionCookie: []
+          apiKey: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Invitations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvitationListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      tags: [Organizations]
+      operationId: createInvitation
+      summary: Send an organization invitation
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvitationCreateRequest"
+      responses:
+        "201":
+          description: Invitation created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Invitation"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/invitations/accept:
+    post:
+      tags: [Organizations, Authentication]
+      operationId: acceptInvitation
+      summary: Accept an invitation using a body token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/InvitationAcceptRequest"
+      responses:
+        "200":
+          description: Invitation accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/InvitationAcceptanceResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/invitations/{invitationId}:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - $ref: "#/components/parameters/InvitationId"
+    delete:
+      tags: [Organizations]
+      operationId: revokeInvitation
+      summary: Revoke an invitation
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "204":
+          description: Invitation revoked
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/invitations/{invitationId}/resend:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - $ref: "#/components/parameters/InvitationId"
+    post:
+      tags: [Organizations]
+      operationId: resendInvitation
+      summary: Resend an invitation within abuse limits
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "202":
+          description: Invitation delivery accepted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AcceptedResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/notifications:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Notifications]
+      operationId: listNotifications
+      summary: List visible notifications
+      security:
+        - sessionCookie: []
+          apiKey: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+      responses:
+        "200":
+          description: Notifications and unread count
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/notifications/{notificationId}/read:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - $ref: "#/components/parameters/NotificationId"
+    patch:
+      tags: [Notifications]
+      operationId: markNotificationRead
+      summary: Mark one notification as read
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "204":
+          description: Notification marked read
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/notifications/read-all:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    post:
+      tags: [Notifications]
+      operationId: markAllNotificationsRead
+      summary: Mark all visible notifications as read
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "204":
+          description: Notifications marked read
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/notifications/preferences:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Notifications]
+      operationId: getNotificationPreferences
+      summary: Read notification preferences
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: Notification preferences
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferences"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    patch:
+      tags: [Notifications]
+      operationId: updateNotificationPreferences
+      summary: Update notification preferences
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/NotificationPreferencesUpdateRequest"
+      responses:
+        "200":
+          description: Notification preferences updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotificationPreferences"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/api-keys:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Integrations]
+      operationId: listApiKeys
+      summary: List API-key metadata without raw values
+      security:
+        - sessionCookie: []
+      responses:
+        "200":
+          description: API-key metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiKeyListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+    post:
+      tags: [Integrations]
+      operationId: createApiKey
+      summary: Create an organization API key and return it once
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ApiKeyCreateRequest"
+      responses:
+        "201":
+          description: API key created; raw value is returned once
+          headers:
+            Cache-Control:
+              schema:
+                type: string
+                const: no-store
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiKeyCreatedResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/api-keys/{apiKeyId}:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - $ref: "#/components/parameters/ApiKeyId"
+    delete:
+      tags: [Integrations]
+      operationId: revokeApiKey
+      summary: Revoke an organization API key
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "204":
+          description: API key revoked
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/auth/mfa/enroll:
+    post:
+      tags: [Authentication]
+      operationId: beginMfaEnrollment
+      summary: Begin TOTP enrollment
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "200":
+          description: Enrollment challenge; secret is returned only to the authenticated client
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MfaEnrollmentResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/auth/mfa/verify:
+    post:
+      tags: [Authentication]
+      operationId: verifyMfaEnrollment
+      summary: Confirm TOTP enrollment
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MfaCodeRequest"
+      responses:
+        "200":
+          description: MFA enabled and recovery codes issued once
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MfaRecoveryCodesResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/auth/mfa/challenge/verify:
+    post:
+      tags: [Authentication]
+      operationId: verifyMfaChallenge
+      summary: Complete a pending MFA login challenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MfaChallengeRequest"
+      responses:
+        "200":
+          description: Authenticated session upgraded after MFA
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/auth/mfa/disable:
+    post:
+      tags: [Authentication]
+      operationId: disableMfa
+      summary: Disable MFA after step-up authentication
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MfaCodeRequest"
+      responses:
+        "204":
+          description: MFA disabled
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/auth/mfa/recovery-codes/rotate:
+    post:
+      tags: [Authentication]
+      operationId: rotateMfaRecoveryCodes
+      summary: Rotate MFA recovery codes
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "200":
+          description: New recovery codes returned once
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/MfaRecoveryCodesResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/auth/mfa/recovery-codes/use:
+    post:
+      tags: [Authentication]
+      operationId: useMfaRecoveryCode
+      summary: Consume one MFA recovery code during a challenge
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MfaChallengeRequest"
+      responses:
+        "200":
+          description: Challenge completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/auth/oidc/start:
+    post:
+      tags: [Authentication, Integrations]
+      operationId: startOidcLogin
+      summary: Start a provider-neutral OIDC transaction
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OidcStartRequest"
+      responses:
+        "200":
+          description: OIDC authorization URL and opaque transaction metadata
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/OidcStartResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/auth/oidc/{provider}/callback:
+    parameters:
+      - $ref: "#/components/parameters/OidcProvider"
+    get:
+      tags: [Authentication, Integrations]
+      operationId: completeOidcLogin
+      summary: Validate an OIDC state/nonce/PKCE callback
+      parameters:
+        - name: code
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 1
+            maxLength: 2048
+        - name: state
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 16
+            maxLength: 256
+      responses:
+        "200":
+          description: OIDC login completed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LoginResponse"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
+  /api/v1/organizations/{organizationId}/auth/oidc/{provider}/link:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - $ref: "#/components/parameters/OidcProvider"
+    post:
+      tags: [Authentication, Integrations]
+      operationId: linkOidcIdentity
+      summary: Link a verified OIDC identity to the current user
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/OidcLinkRequest"
+      responses:
+        "204":
+          description: External identity linked
+        "400":
+          $ref: "#/components/responses/BadRequest"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+        "500":
+          $ref: "#/components/responses/InternalError"
+
 components:
   securitySchemes:
     sessionCookie:
@@ -284,6 +2544,11 @@ components:
       in: header
       name: X-CSRF-Token
       description: Required for state-changing requests after login.
+    apiKey:
+      type: http
+      scheme: bearer
+      bearerFormat: umk_<prefix>_<secret>
+      description: Organization-bound API key accepted only in the Authorization header.
 
   headers:
     RequestId:
@@ -303,6 +2568,11 @@ components:
       schema:
         type: integer
         minimum: 0
+    RateLimitReset:
+      description: Unix timestamp in seconds when the current rate-limit window resets.
+      schema:
+        type: integer
+        minimum: 0
     RetryAfter:
       description: Number of seconds to wait before retrying.
       schema:
@@ -310,6 +2580,84 @@ components:
         minimum: 1
 
   parameters:
+    OrganizationId:
+      name: organizationId
+      in: path
+      required: true
+      description: Organization UUID used to establish tenant context.
+      schema:
+        type: string
+        format: uuid
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      description: Session UUID; raw session values are never exposed.
+      schema:
+        type: string
+        format: uuid
+    JobId:
+      name: jobId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    RoleId:
+      name: roleId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    TeamId:
+      name: teamId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    InvitationId:
+      name: invitationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    NotificationId:
+      name: notificationId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ApiKeyId:
+      name: apiKeyId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    OidcProvider:
+      name: provider
+      in: path
+      required: true
+      schema:
+        type: string
+        minLength: 1
+        maxLength: 64
+        pattern: "^[a-z0-9][a-z0-9_-]*$"
+    UserStatusFilter:
+      name: status
+      in: query
+      schema:
+        $ref: "#/components/schemas/UserStatus"
+    RoleFilter:
+      name: role
+      in: query
+      schema:
+        type: string
+        maxLength: 64
     UserId:
       name: userId
       in: path
@@ -358,6 +2706,12 @@ components:
         default: desc
 
   responses:
+    BadRequest:
+      description: The request is syntactically invalid or violates a business rule.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
     Unauthorized:
       description: Authentication is required or the credentials are invalid.
       content:
@@ -401,6 +2755,24 @@ components:
         application/json:
           schema:
             $ref: "#/components/schemas/ErrorResponse"
+    PayloadTooLarge:
+      description: The request exceeds the configured size or row limit.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    InternalError:
+      description: An unexpected server error occurred.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    DependencyFailure:
+      description: A required dependency is temporarily unavailable.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
 
   schemas:
     UserRole:
@@ -423,6 +2795,7 @@ components:
           hobbies,
           customHobbies,
           role,
+          status,
           isActive,
           createdAt,
           updatedAt,
@@ -461,8 +2834,14 @@ components:
           $ref: "#/components/schemas/HobbyList"
         role:
           $ref: "#/components/schemas/UserRole"
+        status:
+          $ref: "#/components/schemas/UserStatus"
         isActive:
           type: boolean
+        emailVerifiedAt:
+          type: string
+          format: date-time
+          nullable: true
         createdAt:
           type: string
           format: date-time
@@ -644,3 +3023,960 @@ components:
           type: string
           minLength: 1
           maxLength: 128
+
+    AcceptedResponse:
+      type: object
+      required: [accepted]
+      properties:
+        accepted:
+          type: boolean
+          const: true
+
+    UserStatus:
+      type: string
+      enum: [pending, active, inactive, suspended, locked, deleted]
+
+    PasswordChangeRequest:
+      type: object
+      required: [currentPassword, newPassword]
+      properties:
+        currentPassword:
+          type: string
+          format: password
+          minLength: 12
+          maxLength: 128
+        newPassword:
+          type: string
+          format: password
+          minLength: 12
+          maxLength: 128
+
+    PasswordResetRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+
+    PasswordResetConsumeRequest:
+      type: object
+      required: [token, newPassword]
+      properties:
+        token:
+          type: string
+          minLength: 32
+          maxLength: 512
+        newPassword:
+          type: string
+          format: password
+          minLength: 12
+          maxLength: 128
+
+    TokenConsumeRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          minLength: 32
+          maxLength: 512
+
+    RestoreUserRequest:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [active, inactive]
+          default: inactive
+
+    UserStatusUpdateRequest:
+      type: object
+      required: [status]
+      properties:
+        status:
+          $ref: "#/components/schemas/UserStatus"
+
+    Session:
+      type: object
+      required: [id, createdAt, expiresAt, current, revoked]
+      properties:
+        id:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+        lastSeenAt:
+          type: string
+          format: date-time
+        userAgent:
+          type: string
+          maxLength: 512
+        ipAddress:
+          type: string
+          maxLength: 64
+        current:
+          type: boolean
+        revoked:
+          type: boolean
+
+    SessionListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Session"
+
+    BulkUserIdsRequest:
+      type: object
+      required: [userIds, idempotencyKey]
+      properties:
+        userIds:
+          type: array
+          minItems: 1
+          maxItems: 500
+          uniqueItems: true
+          items:
+            type: string
+            format: uuid
+        idempotencyKey:
+          type: string
+          minLength: 16
+          maxLength: 128
+
+    BulkUserStatusRequest:
+      allOf:
+        - $ref: "#/components/schemas/BulkUserIdsRequest"
+        - type: object
+          required: [status]
+          properties:
+            status:
+              $ref: "#/components/schemas/UserStatus"
+
+    BulkUserRoleRequest:
+      allOf:
+        - $ref: "#/components/schemas/BulkUserIdsRequest"
+        - type: object
+          required: [roleId]
+          properties:
+            roleId:
+              type: string
+              format: uuid
+
+    UserImportRequest:
+      type: object
+      required: [file]
+      properties:
+        file:
+          type: string
+          format: binary
+          description: UTF-8 CSV file subject to configured byte and row limits.
+        mode:
+          type: string
+          enum: [createOnly, upsert]
+          default: createOnly
+
+    ImportCommitRequest:
+      type: object
+      required: [previewId, idempotencyKey]
+      properties:
+        previewId:
+          type: string
+          format: uuid
+        idempotencyKey:
+          type: string
+          minLength: 16
+          maxLength: 128
+
+    ImportRowResult:
+      type: object
+      required: [rowNumber, accepted]
+      properties:
+        rowNumber:
+          type: integer
+          minimum: 1
+        accepted:
+          type: boolean
+        code:
+          type: string
+          maxLength: 64
+        message:
+          type: string
+          maxLength: 500
+
+    ImportPreviewResponse:
+      type: object
+      required: [previewId, totalRows, acceptedRows, rejectedRows, rows]
+      properties:
+        previewId:
+          type: string
+          format: uuid
+        totalRows:
+          type: integer
+          minimum: 0
+        acceptedRows:
+          type: integer
+          minimum: 0
+        rejectedRows:
+          type: integer
+          minimum: 0
+        rows:
+          type: array
+          maxItems: 500
+          items:
+            $ref: "#/components/schemas/ImportRowResult"
+
+    JobStatus:
+      type: string
+      enum: [queued, running, succeeded, failed, cancelled, expired]
+
+    Job:
+      type: object
+      required: [id, kind, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          maxLength: 64
+        status:
+          $ref: "#/components/schemas/JobStatus"
+        progress:
+          type: integer
+          minimum: 0
+          maximum: 100
+        resultUrl:
+          type: string
+          format: uri
+          maxLength: 2048
+        errorCode:
+          type: string
+          maxLength: 64
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    JobResponse:
+      type: object
+      required: [job]
+      properties:
+        job:
+          $ref: "#/components/schemas/Job"
+
+    JobListResponse:
+      type: object
+      required: [items, page, pageSize, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Job"
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+        total:
+          type: integer
+          minimum: 0
+
+    Permission:
+      type: object
+      required: [id, key, description]
+      properties:
+        id:
+          type: string
+          format: uuid
+        key:
+          type: string
+          maxLength: 120
+        description:
+          type: string
+          maxLength: 500
+
+    PermissionListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Permission"
+
+    Role:
+      type: object
+      required: [id, name, permissions, system]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: string
+          maxLength: 500
+        permissions:
+          type: array
+          maxItems: 200
+          items:
+            type: string
+            maxLength: 120
+        system:
+          type: boolean
+
+    RoleListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Role"
+
+    RoleCreateRequest:
+      type: object
+      required: [name, permissions]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: string
+          maxLength: 500
+        permissions:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items:
+            type: string
+            maxLength: 120
+
+    RoleUpdateRequest:
+      type: object
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        description:
+          type: string
+          maxLength: 500
+        permissions:
+          type: array
+          minItems: 1
+          maxItems: 200
+          items:
+            type: string
+            maxLength: 120
+
+    RoleAssignmentRequest:
+      type: object
+      required: [roleId]
+      properties:
+        roleId:
+          type: string
+          format: uuid
+
+    RoleAssignment:
+      type: object
+      required: [userId, roleId, createdAt]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        roleId:
+          type: string
+          format: uuid
+        createdAt:
+          type: string
+          format: date-time
+
+    AuditLog:
+      type: object
+      required: [id, eventType, occurredAt, actorType]
+      properties:
+        id:
+          type: string
+          format: uuid
+        eventType:
+          type: string
+          maxLength: 120
+        actorId:
+          type: string
+          format: uuid
+        actorType:
+          type: string
+          enum: [user, system, apiKey]
+        targetType:
+          type: string
+          maxLength: 120
+        targetId:
+          type: string
+          format: uuid
+        metadata:
+          type: object
+          additionalProperties: true
+        occurredAt:
+          type: string
+          format: date-time
+
+    AuditLogListResponse:
+      type: object
+      required: [items, page, pageSize, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/AuditLog"
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+
+    Organization:
+      type: object
+      required: [id, name, slug, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 120
+          pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    OrganizationCreateRequest:
+      type: object
+      required: [name, slug]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 120
+          pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+
+    OrganizationUpdateRequest:
+      type: object
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        slug:
+          type: string
+          minLength: 1
+          maxLength: 120
+          pattern: "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+
+    OrganizationListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Organization"
+
+    Member:
+      type: object
+      required: [organizationId, userId, roleId, status, createdAt]
+      properties:
+        organizationId:
+          type: string
+          format: uuid
+        userId:
+          type: string
+          format: uuid
+        roleId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [invited, active, suspended, removed]
+        createdAt:
+          type: string
+          format: date-time
+
+    MemberListResponse:
+      type: object
+      required: [items, page, pageSize, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Member"
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+
+    MemberCreateRequest:
+      type: object
+      required: [userId, roleId]
+      properties:
+        userId:
+          type: string
+          format: uuid
+        roleId:
+          type: string
+          format: uuid
+
+    MemberUpdateRequest:
+      type: object
+      minProperties: 1
+      properties:
+        roleId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [active, suspended, removed]
+
+    Team:
+      type: object
+      required: [id, organizationId, name, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        description:
+          type: string
+          maxLength: 500
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    TeamListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Team"
+
+    TeamCreateRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        description:
+          type: string
+          maxLength: 500
+
+    TeamUpdateRequest:
+      type: object
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        description:
+          type: string
+          maxLength: 500
+
+    Invitation:
+      type: object
+      required: [id, organizationId, email, status, expiresAt, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        roleId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [pending, accepted, revoked, expired]
+        expiresAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+
+    InvitationListResponse:
+      type: object
+      required: [items, page, pageSize, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Invitation"
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+
+    InvitationCreateRequest:
+      type: object
+      required: [email, roleId, idempotencyKey]
+      properties:
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        roleId:
+          type: string
+          format: uuid
+        idempotencyKey:
+          type: string
+          minLength: 16
+          maxLength: 128
+
+    InvitationAcceptRequest:
+      type: object
+      required: [token]
+      properties:
+        token:
+          type: string
+          minLength: 32
+          maxLength: 512
+
+    InvitationAcceptanceResponse:
+      type: object
+      required: [organization, member]
+      properties:
+        organization:
+          $ref: "#/components/schemas/Organization"
+        member:
+          $ref: "#/components/schemas/Member"
+
+    Notification:
+      type: object
+      required: [id, kind, title, body, read, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        kind:
+          type: string
+          maxLength: 80
+        title:
+          type: string
+          maxLength: 200
+        body:
+          type: string
+          maxLength: 2000
+        read:
+          type: boolean
+        createdAt:
+          type: string
+          format: date-time
+
+    NotificationListResponse:
+      type: object
+      required: [items, unreadCount, page, pageSize, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Notification"
+        unreadCount:
+          type: integer
+          minimum: 0
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+
+    NotificationPreferences:
+      type: object
+      required: [emailSecurity, emailProduct, inAppSecurity, inAppProduct]
+      properties:
+        emailSecurity:
+          type: boolean
+        emailProduct:
+          type: boolean
+        inAppSecurity:
+          type: boolean
+        inAppProduct:
+          type: boolean
+
+    NotificationPreferencesUpdateRequest:
+      allOf:
+        - $ref: "#/components/schemas/NotificationPreferences"
+
+    ApiKey:
+      type: object
+      required: [id, prefix, name, scopes, createdAt, revoked]
+      properties:
+        id:
+          type: string
+          format: uuid
+        prefix:
+          type: string
+          maxLength: 64
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        scopes:
+          type: array
+          maxItems: 100
+          items:
+            type: string
+            maxLength: 120
+        createdAt:
+          type: string
+          format: date-time
+        lastUsedAt:
+          type: string
+          format: date-time
+        revoked:
+          type: boolean
+
+    ApiKeyListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ApiKey"
+
+    ApiKeyCreateRequest:
+      type: object
+      required: [name, scopes]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 120
+        scopes:
+          type: array
+          minItems: 1
+          maxItems: 100
+          items:
+            type: string
+            maxLength: 120
+
+    ApiKeyCreatedResponse:
+      type: object
+      required: [key, metadata]
+      properties:
+        key:
+          type: string
+          minLength: 32
+          maxLength: 256
+          description: Raw API key returned exactly once and never persisted in plaintext.
+        metadata:
+          $ref: "#/components/schemas/ApiKey"
+
+    DashboardResponse:
+      type: object
+      required: [totalUsers, activeUsers, pendingUsers, suspendedUsers, teams]
+      properties:
+        totalUsers:
+          type: integer
+          minimum: 0
+        activeUsers:
+          type: integer
+          minimum: 0
+        pendingUsers:
+          type: integer
+          minimum: 0
+        suspendedUsers:
+          type: integer
+          minimum: 0
+        teams:
+          type: integer
+          minimum: 0
+
+    OrganizationSettings:
+      type: object
+      required: [organizationId, defaultRoleId, requireEmailVerification, allowSelfJoin]
+      properties:
+        organizationId:
+          type: string
+          format: uuid
+        defaultRoleId:
+          type: string
+          format: uuid
+        requireEmailVerification:
+          type: boolean
+        allowSelfJoin:
+          type: boolean
+
+    OrganizationSettingsUpdateRequest:
+      type: object
+      minProperties: 1
+      properties:
+        defaultRoleId:
+          type: string
+          format: uuid
+        requireEmailVerification:
+          type: boolean
+        allowSelfJoin:
+          type: boolean
+
+    MfaCodeRequest:
+      type: object
+      required: [code]
+      properties:
+        code:
+          type: string
+          pattern: "^[0-9]{6}$"
+
+    MfaChallengeRequest:
+      type: object
+      required: [challengeId, code]
+      properties:
+        challengeId:
+          type: string
+          minLength: 16
+          maxLength: 256
+        code:
+          type: string
+          minLength: 6
+          maxLength: 32
+
+    MfaEnrollmentResponse:
+      type: object
+      required: [enrollmentId, issuer, accountName, secret]
+      properties:
+        enrollmentId:
+          type: string
+          format: uuid
+        issuer:
+          type: string
+          maxLength: 120
+        accountName:
+          type: string
+          maxLength: 254
+        secret:
+          type: string
+          minLength: 16
+          maxLength: 256
+          description: Sensitive enrollment secret; returned only to the authenticated client and never logged.
+
+    MfaRecoveryCodesResponse:
+      type: object
+      required: [recoveryCodes]
+      properties:
+        recoveryCodes:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            type: string
+            minLength: 8
+            maxLength: 64
+
+    OidcStartRequest:
+      type: object
+      required: [provider]
+      properties:
+        provider:
+          type: string
+          minLength: 1
+          maxLength: 64
+        organizationId:
+          type: string
+          format: uuid
+        invitationToken:
+          type: string
+          minLength: 32
+          maxLength: 512
+
+    OidcStartResponse:
+      type: object
+      required: [transactionId, authorizationUrl]
+      properties:
+        transactionId:
+          type: string
+          format: uuid
+        authorizationUrl:
+          type: string
+          format: uri
+          maxLength: 4096
+
+    OidcLinkRequest:
+      type: object
+      required: [code, state]
+      properties:
+        code:
+          type: string
+          minLength: 1
+          maxLength: 2048
+        state:
+          type: string
+          minLength: 16
+          maxLength: 256

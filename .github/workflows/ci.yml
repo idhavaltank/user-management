@@ -86,3 +86,6 @@ jobs:
 
       - name: Check generated API artifacts
         run: npm run check:generated
+
+      - name: Validate OpenAPI contract
+        run: npm run validate:api

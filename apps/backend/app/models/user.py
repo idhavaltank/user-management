@@ -31,6 +31,17 @@ class UserRole(enum.StrEnum):
     USER = "user"
 
 
+class UserStatus(enum.StrEnum):
+    """Canonical account lifecycle independent from soft deletion."""
+
+    PENDING = "pending"
+    ACTIVE = "active"
+    INACTIVE = "inactive"
+    SUSPENDED = "suspended"
+    LOCKED = "locked"
+    DELETED = "deleted"
+
+
 class Gender(enum.StrEnum):
     """Gender values preserved from the existing frontend contract."""
 
@@ -48,6 +59,10 @@ class User(TimestampMixin, Base):
         CheckConstraint("birth_date >= DATE '1960-01-01'", name="birth_date_min"),
         CheckConstraint("birth_date <= DATE '2000-01-01'", name="birth_date_max"),
         CheckConstraint("role IN ('admin', 'user')", name="role_valid"),
+        CheckConstraint(
+            "status IN ('pending', 'active', 'inactive', 'suspended', 'locked', 'deleted')",
+            name="status_valid",
+        ),
         CheckConstraint("gender IN ('Men', 'Women')", name="gender_valid"),
         CheckConstraint("length(trim(name)) > 0", name="name_non_empty"),
         CheckConstraint("cardinality(hobbies) <= 20", name="hobbies_max_items"),
@@ -92,6 +107,20 @@ class User(TimestampMixin, Base):
         ARRAY(Text), nullable=False, default=list, server_default=text("'{}'::text[]")
     )
     role: Mapped[UserRole] = mapped_column(String(16), nullable=False, default=UserRole.USER)
+    status: Mapped[UserStatus] = mapped_column(
+        String(16), nullable=False, default=UserStatus.ACTIVE, server_default="active"
+    )
+    email_verified_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
+    failed_login_attempts: Mapped[int] = mapped_column(
+        default=0, server_default="0", nullable=False
+    )
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    password_changed_at: Mapped[datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True
+    )
     # Deletion is represented as state so history and email conflict behavior
     # remain explicit instead of physically removing rows.
     is_active: Mapped[bool] = mapped_column(

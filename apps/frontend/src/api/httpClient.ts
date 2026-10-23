@@ -55,7 +55,10 @@ export class FetchHttpClient implements HttpClient {
     const headers = new Headers(init.headers);
     headers.set('Accept', 'application/json');
 
-    if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json');
+    const isFormDataBody = typeof FormData !== 'undefined' && init.body instanceof FormData;
+    if (init.body && !headers.has('Content-Type') && !isFormDataBody) {
+      headers.set('Content-Type', 'application/json');
+    }
     if (UNSAFE_METHODS.has(method) && this.csrfToken) headers.set('X-CSRF-Token', this.csrfToken);
 
     const response = await this.fetchImpl(`${this.baseUrl}${path}`, {

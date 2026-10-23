@@ -1,6 +1,7 @@
 import type { Dispatch } from 'redux';
 import {
   createUser,
+  createOrganizationUser,
   getApiErrorMessage,
   type UserCreateRequest,
   type User,
@@ -121,8 +122,12 @@ export interface MigrationResult {
   failures: string[];
 }
 
+const createMigratedUser = (organizationId: string | undefined, payload: UserCreateRequest): Promise<User> =>
+  organizationId ? createOrganizationUser(organizationId, payload) : createUser(payload);
+
 export const migrateLegacyUsers = async (
-  dispatch: Dispatch<UserAction>
+  dispatch: Dispatch<UserAction>,
+  organizationId?: string
 ): Promise<MigrationResult> => {
   const legacyUsers = pendingLegacyUsers();
   const backup = window.localStorage.getItem(LEGACY_USER_STORAGE_KEY);
@@ -143,7 +148,7 @@ export const migrateLegacyUsers = async (
       try {
         // Keep imports sequential so the backend and browser state remain deterministic.
         // eslint-disable-next-line no-await-in-loop
-        const created: User = await createUser(payload);
+        const created: User = await createMigratedUser(organizationId, payload);
         dispatch(userSaved(created));
         imported += 1;
       } catch (error) {

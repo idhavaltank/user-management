@@ -6,10 +6,18 @@ from __future__ import annotations
 
 from datetime import date
 from enum import Enum
-from typing import Annotated, Any
+from typing import Annotated, Any, Literal
 from uuid import UUID
 
-from pydantic import AwareDatetime, BaseModel, EmailStr, Field, RootModel, SecretStr
+from pydantic import (
+    AnyUrl,
+    AwareDatetime,
+    BaseModel,
+    EmailStr,
+    Field,
+    RootModel,
+    SecretStr,
+)
 
 
 class UserRole(Enum):
@@ -67,6 +75,476 @@ class ErrorResponse(BaseModel):
     requestId: Annotated[str, Field(max_length=128, min_length=1)]
 
 
+class AcceptedResponse(BaseModel):
+    accepted: Literal[True]
+
+
+class UserStatus(Enum):
+    pending = 'pending'
+    active = 'active'
+    inactive = 'inactive'
+    suspended = 'suspended'
+    locked = 'locked'
+    deleted = 'deleted'
+
+
+class PasswordChangeRequest(BaseModel):
+    currentPassword: Annotated[SecretStr, Field(max_length=128, min_length=12)]
+    newPassword: Annotated[SecretStr, Field(max_length=128, min_length=12)]
+
+
+class PasswordResetRequest(BaseModel):
+    email: Annotated[EmailStr, Field(max_length=254)]
+
+
+class PasswordResetConsumeRequest(BaseModel):
+    token: Annotated[str, Field(max_length=512, min_length=32)]
+    newPassword: Annotated[SecretStr, Field(max_length=128, min_length=12)]
+
+
+class TokenConsumeRequest(BaseModel):
+    token: Annotated[str, Field(max_length=512, min_length=32)]
+
+
+class Status2(Enum):
+    active = 'active'
+    inactive = 'inactive'
+
+
+class RestoreUserRequest(BaseModel):
+    status: Status2 | None = 'inactive'
+
+
+class UserStatusUpdateRequest(BaseModel):
+    status: UserStatus
+
+
+class Session(BaseModel):
+    id: UUID
+    createdAt: AwareDatetime
+    expiresAt: AwareDatetime
+    lastSeenAt: AwareDatetime | None = None
+    userAgent: Annotated[str | None, Field(max_length=512)] = None
+    ipAddress: Annotated[str | None, Field(max_length=64)] = None
+    current: bool
+    revoked: bool
+
+
+class SessionListResponse(BaseModel):
+    items: list[Session]
+
+
+class BulkUserIdsRequest(BaseModel):
+    userIds: Annotated[list[UUID], Field(max_length=500, min_length=1)]
+    idempotencyKey: Annotated[str, Field(max_length=128, min_length=16)]
+
+
+class BulkUserStatusRequest(BulkUserIdsRequest):
+    status: UserStatus
+
+
+class BulkUserRoleRequest(BulkUserIdsRequest):
+    roleId: UUID
+
+
+class Mode(Enum):
+    createOnly = 'createOnly'
+    upsert = 'upsert'
+
+
+class UserImportRequest(BaseModel):
+    file: Annotated[
+        bytes,
+        Field(description='UTF-8 CSV file subject to configured byte and row limits.'),
+    ]
+    mode: Mode | None = 'createOnly'
+
+
+class ImportCommitRequest(BaseModel):
+    previewId: UUID
+    idempotencyKey: Annotated[str, Field(max_length=128, min_length=16)]
+
+
+class ImportRowResult(BaseModel):
+    rowNumber: Annotated[int, Field(ge=1)]
+    accepted: bool
+    code: Annotated[str | None, Field(max_length=64)] = None
+    message: Annotated[str | None, Field(max_length=500)] = None
+
+
+class ImportPreviewResponse(BaseModel):
+    previewId: UUID
+    totalRows: Annotated[int, Field(ge=0)]
+    acceptedRows: Annotated[int, Field(ge=0)]
+    rejectedRows: Annotated[int, Field(ge=0)]
+    rows: Annotated[list[ImportRowResult], Field(max_length=500)]
+
+
+class JobStatus(Enum):
+    queued = 'queued'
+    running = 'running'
+    succeeded = 'succeeded'
+    failed = 'failed'
+    cancelled = 'cancelled'
+    expired = 'expired'
+
+
+class Job(BaseModel):
+    id: UUID
+    kind: Annotated[str, Field(max_length=64)]
+    status: JobStatus
+    progress: Annotated[int | None, Field(ge=0, le=100)] = None
+    resultUrl: AnyUrl | None = None
+    errorCode: Annotated[str | None, Field(max_length=64)] = None
+    createdAt: AwareDatetime
+    updatedAt: AwareDatetime
+
+
+class JobResponse(BaseModel):
+    job: Job
+
+
+class JobListResponse(BaseModel):
+    items: list[Job]
+    page: Annotated[int, Field(ge=1)]
+    pageSize: Annotated[int, Field(ge=1)]
+    total: Annotated[int, Field(ge=0)]
+
+
+class Permission(BaseModel):
+    id: UUID
+    key: Annotated[str, Field(max_length=120)]
+    description: Annotated[str, Field(max_length=500)]
+
+
+class PermissionListResponse(BaseModel):
+    items: list[Permission]
+
+
+class Permission1(RootModel[str]):
+    root: Annotated[str, Field(max_length=120)]
+
+
+class Role(BaseModel):
+    id: UUID
+    name: Annotated[str, Field(max_length=120, min_length=1)]
+    description: Annotated[str | None, Field(max_length=500)] = None
+    permissions: Annotated[list[Permission1], Field(max_length=200)]
+    system: bool
+
+
+class RoleListResponse(BaseModel):
+    items: list[Role]
+
+
+class RoleCreateRequest(BaseModel):
+    name: Annotated[str, Field(max_length=120, min_length=1)]
+    description: Annotated[str | None, Field(max_length=500)] = None
+    permissions: Annotated[list[Permission1], Field(max_length=200, min_length=1)]
+
+
+class RoleUpdateRequest(BaseModel):
+    name: Annotated[str | None, Field(max_length=120, min_length=1)] = None
+    description: Annotated[str | None, Field(max_length=500)] = None
+    permissions: Annotated[
+        list[Permission1] | None, Field(max_length=200, min_length=1)
+    ] = None
+
+
+class RoleAssignmentRequest(BaseModel):
+    roleId: UUID
+
+
+class RoleAssignment(BaseModel):
+    userId: UUID
+    roleId: UUID
+    createdAt: AwareDatetime
+
+
+class ActorType(Enum):
+    user = 'user'
+    system = 'system'
+    apiKey = 'apiKey'
+
+
+class AuditLog(BaseModel):
+    id: UUID
+    eventType: Annotated[str, Field(max_length=120)]
+    actorId: UUID | None = None
+    actorType: ActorType
+    targetType: Annotated[str | None, Field(max_length=120)] = None
+    targetId: UUID | None = None
+    metadata: dict[str, Any] | None = None
+    occurredAt: AwareDatetime
+
+
+class AuditLogListResponse(BaseModel):
+    items: list[AuditLog]
+    page: Annotated[int, Field(ge=1)]
+    pageSize: Annotated[int, Field(ge=1, le=100)]
+    total: Annotated[int, Field(ge=0)]
+
+
+class Organization(BaseModel):
+    id: UUID
+    name: Annotated[str, Field(max_length=160, min_length=1)]
+    slug: Annotated[
+        str, Field(max_length=120, min_length=1, pattern='^[a-z0-9]+(?:-[a-z0-9]+)*$')
+    ]
+    createdAt: AwareDatetime
+    updatedAt: AwareDatetime
+
+
+class OrganizationCreateRequest(BaseModel):
+    name: Annotated[str, Field(max_length=160, min_length=1)]
+    slug: Annotated[
+        str, Field(max_length=120, min_length=1, pattern='^[a-z0-9]+(?:-[a-z0-9]+)*$')
+    ]
+
+
+class OrganizationUpdateRequest(BaseModel):
+    name: Annotated[str | None, Field(max_length=160, min_length=1)] = None
+    slug: Annotated[
+        str | None,
+        Field(max_length=120, min_length=1, pattern='^[a-z0-9]+(?:-[a-z0-9]+)*$'),
+    ] = None
+
+
+class OrganizationListResponse(BaseModel):
+    items: list[Organization]
+
+
+class Status3(Enum):
+    invited = 'invited'
+    active = 'active'
+    suspended = 'suspended'
+    removed = 'removed'
+
+
+class Member(BaseModel):
+    organizationId: UUID
+    userId: UUID
+    roleId: UUID
+    status: Status3
+    createdAt: AwareDatetime
+
+
+class MemberListResponse(BaseModel):
+    items: list[Member]
+    page: Annotated[int, Field(ge=1)]
+    pageSize: Annotated[int, Field(ge=1, le=100)]
+    total: Annotated[int, Field(ge=0)]
+
+
+class MemberCreateRequest(BaseModel):
+    userId: UUID
+    roleId: UUID
+
+
+class Status4(Enum):
+    active = 'active'
+    suspended = 'suspended'
+    removed = 'removed'
+
+
+class MemberUpdateRequest(BaseModel):
+    roleId: UUID | None = None
+    status: Status4 | None = None
+
+
+class Team(BaseModel):
+    id: UUID
+    organizationId: UUID
+    name: Annotated[str, Field(max_length=160, min_length=1)]
+    description: Annotated[str | None, Field(max_length=500)] = None
+    createdAt: AwareDatetime
+    updatedAt: AwareDatetime
+
+
+class TeamListResponse(BaseModel):
+    items: list[Team]
+
+
+class TeamCreateRequest(BaseModel):
+    name: Annotated[str, Field(max_length=160, min_length=1)]
+    description: Annotated[str | None, Field(max_length=500)] = None
+
+
+class TeamUpdateRequest(BaseModel):
+    name: Annotated[str | None, Field(max_length=160, min_length=1)] = None
+    description: Annotated[str | None, Field(max_length=500)] = None
+
+
+class Status5(Enum):
+    pending = 'pending'
+    accepted = 'accepted'
+    revoked = 'revoked'
+    expired = 'expired'
+
+
+class Invitation(BaseModel):
+    id: UUID
+    organizationId: UUID
+    email: Annotated[EmailStr, Field(max_length=254)]
+    roleId: UUID | None = None
+    status: Status5
+    expiresAt: AwareDatetime
+    createdAt: AwareDatetime
+
+
+class InvitationListResponse(BaseModel):
+    items: list[Invitation]
+    page: Annotated[int, Field(ge=1)]
+    pageSize: Annotated[int, Field(ge=1, le=100)]
+    total: Annotated[int, Field(ge=0)]
+
+
+class InvitationCreateRequest(BaseModel):
+    email: Annotated[EmailStr, Field(max_length=254)]
+    roleId: UUID
+    idempotencyKey: Annotated[str, Field(max_length=128, min_length=16)]
+
+
+class InvitationAcceptRequest(BaseModel):
+    token: Annotated[str, Field(max_length=512, min_length=32)]
+
+
+class InvitationAcceptanceResponse(BaseModel):
+    organization: Organization
+    member: Member
+
+
+class Notification(BaseModel):
+    id: UUID
+    kind: Annotated[str, Field(max_length=80)]
+    title: Annotated[str, Field(max_length=200)]
+    body: Annotated[str, Field(max_length=2000)]
+    read: bool
+    createdAt: AwareDatetime
+
+
+class NotificationListResponse(BaseModel):
+    items: list[Notification]
+    unreadCount: Annotated[int, Field(ge=0)]
+    page: Annotated[int, Field(ge=1)]
+    pageSize: Annotated[int, Field(ge=1, le=100)]
+    total: Annotated[int, Field(ge=0)]
+
+
+class NotificationPreferences(BaseModel):
+    emailSecurity: bool
+    emailProduct: bool
+    inAppSecurity: bool
+    inAppProduct: bool
+
+
+class NotificationPreferencesUpdateRequest(NotificationPreferences):
+    pass
+
+
+class Scope(RootModel[str]):
+    root: Annotated[str, Field(max_length=120)]
+
+
+class ApiKey(BaseModel):
+    id: UUID
+    prefix: Annotated[str, Field(max_length=64)]
+    name: Annotated[str, Field(max_length=120, min_length=1)]
+    scopes: Annotated[list[Scope], Field(max_length=100)]
+    createdAt: AwareDatetime
+    lastUsedAt: AwareDatetime | None = None
+    revoked: bool
+
+
+class ApiKeyListResponse(BaseModel):
+    items: list[ApiKey]
+
+
+class ApiKeyCreateRequest(BaseModel):
+    name: Annotated[str, Field(max_length=120, min_length=1)]
+    scopes: Annotated[list[Scope], Field(max_length=100, min_length=1)]
+
+
+class ApiKeyCreatedResponse(BaseModel):
+    key: Annotated[
+        str,
+        Field(
+            description='Raw API key returned exactly once and never persisted in plaintext.',
+            max_length=256,
+            min_length=32,
+        ),
+    ]
+    metadata: ApiKey
+
+
+class DashboardResponse(BaseModel):
+    totalUsers: Annotated[int, Field(ge=0)]
+    activeUsers: Annotated[int, Field(ge=0)]
+    pendingUsers: Annotated[int, Field(ge=0)]
+    suspendedUsers: Annotated[int, Field(ge=0)]
+    teams: Annotated[int, Field(ge=0)]
+
+
+class OrganizationSettings(BaseModel):
+    organizationId: UUID
+    defaultRoleId: UUID
+    requireEmailVerification: bool
+    allowSelfJoin: bool
+
+
+class OrganizationSettingsUpdateRequest(BaseModel):
+    defaultRoleId: UUID | None = None
+    requireEmailVerification: bool | None = None
+    allowSelfJoin: bool | None = None
+
+
+class MfaCodeRequest(BaseModel):
+    code: Annotated[str, Field(pattern='^[0-9]{6}$')]
+
+
+class MfaChallengeRequest(BaseModel):
+    challengeId: Annotated[str, Field(max_length=256, min_length=16)]
+    code: Annotated[str, Field(max_length=32, min_length=6)]
+
+
+class MfaEnrollmentResponse(BaseModel):
+    enrollmentId: UUID
+    issuer: Annotated[str, Field(max_length=120)]
+    accountName: Annotated[str, Field(max_length=254)]
+    secret: Annotated[
+        str,
+        Field(
+            description='Sensitive enrollment secret; returned only to the authenticated client and never logged.',
+            max_length=256,
+            min_length=16,
+        ),
+    ]
+
+
+class RecoveryCode(RootModel[str]):
+    root: Annotated[str, Field(max_length=64, min_length=8)]
+
+
+class MfaRecoveryCodesResponse(BaseModel):
+    recoveryCodes: Annotated[list[RecoveryCode], Field(max_length=20, min_length=1)]
+
+
+class OidcStartRequest(BaseModel):
+    provider: Annotated[str, Field(max_length=64, min_length=1)]
+    organizationId: UUID | None = None
+    invitationToken: Annotated[str | None, Field(max_length=512, min_length=32)] = None
+
+
+class OidcStartResponse(BaseModel):
+    transactionId: UUID
+    authorizationUrl: AnyUrl
+
+
+class OidcLinkRequest(BaseModel):
+    code: Annotated[str, Field(max_length=2048, min_length=1)]
+    state: Annotated[str, Field(max_length=256, min_length=16)]
+
+
 class User(BaseModel):
     id: UUID
     name: Annotated[str, Field(max_length=120, min_length=1)]
@@ -83,7 +561,9 @@ class User(BaseModel):
     hobbies: HobbyList
     customHobbies: HobbyList
     role: UserRole
+    status: UserStatus
     isActive: bool
+    emailVerifiedAt: AwareDatetime | None = None
     createdAt: AwareDatetime
     updatedAt: AwareDatetime
 

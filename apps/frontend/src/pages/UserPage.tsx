@@ -28,7 +28,12 @@ import Iconify from '../components/iconify/Iconify';
 import Scrollbar from '../components/scrollbar';
 import AddEditUserModal from '../modals/AddEditUserModal';
 import ConfirmationModal from '../modals/ConfirmationModal';
-import { getApiErrorMessage, type ListUsersQuery, type User } from '../api/client';
+import {
+  getApiErrorMessage,
+  listOrganizations,
+  type ListUsersQuery,
+  type User,
+} from '../api/client';
 import { deleteUser, fetchUsers } from '../redux/actions/userAction';
 import { useAppDispatch, useAppSelector } from '../redux/hooks';
 import UserListHead from '../sections/user/UserListHead';
@@ -82,8 +87,21 @@ const UserPage = (): JSX.Element => {
   const [migrationUsers, setMigrationUsers] = useState<LegacyUser[]>(() => pendingLegacyUsers());
   const [migrationRunning, setMigrationRunning] = useState(false);
   const [migrationMessage, setMigrationMessage] = useState('');
+  const [organizationId, setOrganizationId] = useState<string | null>(null);
+  const [organizationError, setOrganizationError] = useState<string | null>(null);
 
   useEffect(() => {
+    listOrganizations()
+      .then((response) => {
+        const organization = response.items[0];
+        if (organization) setOrganizationId(organization.id);
+        else setOrganizationError('No active organization is available for this account.');
+      })
+      .catch((loadError: unknown) => setOrganizationError(getApiErrorMessage(loadError)));
+  }, []);
+
+  useEffect(() => {
+    if (!organizationId) return undefined;
     const controller = new AbortController();
     fetchUsers(dispatch, {
       page: page + 1,
@@ -91,10 +109,10 @@ const UserPage = (): JSX.Element => {
       search: filterName,
       sort: SERVER_SORT_FIELDS.includes(orderBy) ? orderBy : 'createdAt',
       order,
-    }, controller.signal).catch(() => undefined);
+    }, controller.signal, organizationId).catch(() => undefined);
 
     return () => controller.abort();
-  }, [dispatch, filterName, order, orderBy, page, rowsPerPage]);
+  }, [dispatch, filterName, order, orderBy, page, rowsPerPage, organizationId]);
 
   const refreshUsers = (): void => {
     fetchUsers(dispatch, {
@@ -103,7 +121,7 @@ const UserPage = (): JSX.Element => {
       search: filterName,
       sort: SERVER_SORT_FIELDS.includes(orderBy) ? orderBy : 'createdAt',
       order,
-    }).catch(() => undefined);
+    }, undefined, organizationId || undefined).catch(() => undefined);
   };
 
   const handleOpen = ({ key, status: nextStatus, event, data }: OpenPayload): void => {
@@ -142,7 +160,7 @@ const UserPage = (): JSX.Element => {
     handleClose({ key: 'confirmationModal' });
     if (!selectedUser?.id) return;
     try {
-      await deleteUser(dispatch, selectedUser.id);
+      await deleteUser(dispatch, selectedUser.id, organizationId || undefined);
       enqueueSnackbar('User deleted successfully');
       setSelectedUser(null);
       refreshUsers();
@@ -155,7 +173,7 @@ const UserPage = (): JSX.Element => {
     setMigrationRunning(true);
     setMigrationMessage('');
     try {
-      const result = await migrateLegacyUsers(dispatch);
+      const result = await migrateLegacyUsers(dispatch, organizationId || undefined);
       setMigrationUsers(pendingLegacyUsers());
       setMigrationMessage(
         `Imported ${result.imported}, skipped ${result.duplicates} duplicate(s), failed ${result.failed}.`
@@ -178,6 +196,7 @@ const UserPage = (): JSX.Element => {
           <Typography variant="h4">User Management</Typography>
           <Button
             variant="contained"
+            disabled={!organizationId}
             startIcon={<Iconify icon="eva:plus-fill" />}
             onClick={() => handleOpen({ key: 'addEditModal', status: true, data: null })}
           >
@@ -185,6 +204,7 @@ const UserPage = (): JSX.Element => {
           </Button>
         </Stack>
 
+        {organizationError && <Alert severity="error" sx={{ mb: 2 }}>{organizationError}</Alert>}
         {error && <Alert severity="error" sx={{ mb: 2 }}>{error}</Alert>}
         {migrationUsers.length > 0 && (
           <Alert severity="info" sx={{ mb: 2 }} action={<Stack direction="row" spacing={1}><Button color="inherit" size="small" onClick={downloadLegacyBackup}>Download backup</Button><Button color="inherit" size="small" onClick={runMigration} disabled={migrationRunning}>{migrationRunning ? 'Importing…' : 'Import local users'}</Button></Stack>}>
@@ -255,6 +275,7 @@ const UserPage = (): JSX.Element => {
       </Popover>
       <AddEditUserModal
         currentUser={selectedUser}
+        organizationId={organizationId || undefined}
         open={opens.addEditModal}
         handleClose={handleClose}
         onSaved={refreshUsers}

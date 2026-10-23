@@ -31,7 +31,7 @@ from app.generated.schemas import (
 from app.generated.schemas import (
     UserRole as UserRoleSchema,
 )
-from app.models.user import Gender, User, UserRole
+from app.models.user import Gender, User, UserRole, UserStatus
 
 MIN_BIRTH_DATE = date(1960, 1, 1)
 MAX_BIRTH_DATE = date(2000, 1, 1)
@@ -101,7 +101,9 @@ def to_user_schema(user: User) -> UserSchema:
         hobbies=user.hobbies or [],
         customHobbies=user.custom_hobbies or [],
         role=user.role.value if isinstance(user.role, UserRole) else user.role,
+        status=user.status.value if isinstance(user.status, UserStatus) else user.status,
         isActive=user.is_active,
+        emailVerifiedAt=user.email_verified_at,
         createdAt=user.created_at,
         updatedAt=user.updated_at,
     )
@@ -259,5 +261,6 @@ async def delete_user(session: AsyncSession, user_id: UUID) -> None:
     # only after the record is no longer active.
     user.is_active = False
     user.deleted_at = datetime.now(UTC)
+    user.status = UserStatus.DELETED
     user.updated_at = datetime.now(UTC)
     await session.commit()
