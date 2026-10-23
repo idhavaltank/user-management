@@ -40,6 +40,6 @@
     "reset:nx": "nx reset"
   },
   "devDependencies": {
-    "nx": "19.3.1"
+    "nx": "22.7.10"
   }
 }
