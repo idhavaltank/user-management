@@ -16,10 +16,42 @@ export default function ThemeProvider({ children }: ThemeProviderProps): JSX.Ele
   const themeOptions = useMemo(
     () => ({
       palette,
-      shape: { borderRadius: 6 },
+      shape: { borderRadius: 8 },
       typography,
       shadows: shadows(),
       customShadows: customShadows(),
+      components: {
+        MuiButton: {
+          styleOverrides: {
+            root: {
+              borderRadius: 8,
+              textTransform: 'none',
+              fontWeight: 600,
+            },
+          },
+        },
+        MuiCard: {
+          styleOverrides: {
+            root: {
+              border: `1px solid ${palette.divider}`,
+              borderRadius: 12,
+              boxShadow: 'none',
+            },
+          },
+        },
+        MuiChip: {
+          styleOverrides: {
+            root: {
+              borderRadius: 6,
+            },
+          },
+        },
+        MuiTextField: {
+          defaultProps: {
+            variant: 'outlined' as const,
+          },
+        },
+      },
     }),
     []
   );

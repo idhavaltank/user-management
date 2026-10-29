@@ -344,6 +344,325 @@ export interface paths {
         patch: operations["updateUser"];
         trace?: never;
     };
+    "/api/v1/organizations/{organizationId}/crm/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        /** Return FlowSync CRM dashboard metrics for one organization */
+        get: operations["getCrmDashboard"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/accounts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        /** List organization accounts */
+        get: operations["listCrmAccounts"];
+        put?: never;
+        /** Create an organization account */
+        post: operations["createCrmAccount"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/accounts/{accountId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        /** Get one organization account */
+        get: operations["getCrmAccount"];
+        put?: never;
+        post?: never;
+        /** Delete one organization account */
+        delete: operations["deleteCrmAccount"];
+        options?: never;
+        head?: never;
+        /** Update one organization account */
+        patch: operations["updateCrmAccount"];
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/contacts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        /** List organization contacts */
+        get: operations["listCrmContacts"];
+        put?: never;
+        /** Create an organization contact */
+        post: operations["createCrmContact"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/contacts/{contactId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                contactId: string;
+            };
+            cookie?: never;
+        };
+        /** Get one organization contact */
+        get: operations["getCrmContact"];
+        put?: never;
+        post?: never;
+        /** Delete one organization contact */
+        delete: operations["deleteCrmContact"];
+        options?: never;
+        head?: never;
+        /** Update one organization contact */
+        patch: operations["updateCrmContact"];
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/deals": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        /** List organization deals */
+        get: operations["listCrmDeals"];
+        put?: never;
+        /** Create an organization deal */
+        post: operations["createCrmDeal"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/deals/{dealId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                dealId: string;
+            };
+            cookie?: never;
+        };
+        /** Get one organization deal */
+        get: operations["getCrmDeal"];
+        put?: never;
+        post?: never;
+        /** Delete one organization deal */
+        delete: operations["deleteCrmDeal"];
+        options?: never;
+        head?: never;
+        /** Update one organization deal */
+        patch: operations["updateCrmDeal"];
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/activities": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        /** List organization activities */
+        get: operations["listCrmActivities"];
+        put?: never;
+        /** Create an organization activity */
+        post: operations["createCrmActivity"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/activities/{activityId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                activityId: string;
+            };
+            cookie?: never;
+        };
+        /** Get one organization activity */
+        get: operations["getCrmActivity"];
+        put?: never;
+        post?: never;
+        /** Delete one organization activity */
+        delete: operations["deleteCrmActivity"];
+        options?: never;
+        head?: never;
+        /** Update one organization activity */
+        patch: operations["updateCrmActivity"];
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/sync/push": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Push a bounded batch of offline operations */
+        post: operations["pushSyncOperations"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/sync/pull": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        /** Pull accepted operations after a server cursor */
+        get: operations["pullSyncOperations"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/sync/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        /** Read the current server sync sequence */
+        get: operations["getSyncStatus"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/sync/conflicts": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        /** List unresolved or resolved sync conflicts */
+        get: operations["listSyncConflicts"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/sync/conflicts/{conflictId}/resolve": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                conflictId: string;
+            };
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Resolve a conflict by creating a new sync operation */
+        post: operations["resolveSyncConflict"];
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/sync/history/{entity}/{entityId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                entity: components["schemas"]["SyncEntity"];
+                entityId: string;
+            };
+            cookie?: never;
+        };
+        /** List the operation history for one CRM record */
+        get: operations["listSyncHistory"];
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/organizations/{organizationId}/users/{userId}/activity": {
         parameters: {
             query?: never;
@@ -1224,6 +1543,52 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/organizations/{organizationId}/accounts/{accountId}/profile-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        /** Get an account profile image */
+        get: operations["getAccountProfileImage"];
+        put?: never;
+        /** Upload or replace an account profile image */
+        post: operations["uploadAccountProfileImage"];
+        /** Delete an account profile image */
+        delete: operations["deleteAccountProfileImage"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/organizations/{organizationId}/contacts/{contactId}/profile-image": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                contactId: string;
+            };
+            cookie?: never;
+        };
+        /** Get a contact profile image */
+        get: operations["getContactProfileImage"];
+        put?: never;
+        /** Upload or replace a contact profile image */
+        post: operations["uploadContactProfileImage"];
+        /** Delete a contact profile image */
+        delete: operations["deleteContactProfileImage"];
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -1672,6 +2037,389 @@ export interface components {
             /** @description Raw API key returned exactly once and never persisted in plaintext. */
             key: string;
             metadata: components["schemas"]["ApiKey"];
+        };
+        /** @enum {string} */
+        FlowAccountStatus: "prospect" | "customer" | "inactive";
+        /** @enum {string} */
+        FlowContactStatus: "lead" | "active" | "inactive";
+        /** @enum {string} */
+        FlowDealStage: "lead" | "qualified" | "proposal" | "negotiation" | "won" | "lost";
+        /** @enum {string} */
+        FlowActivityKind: "call" | "email" | "meeting" | "task" | "note";
+        /** @enum {string} */
+        FlowActivityStatus: "planned" | "completed" | "cancelled";
+        CrmAccount: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            organizationId: string;
+            name: string;
+            industry?: string | null;
+            website?: string | null;
+            phone?: string | null;
+            address?: string | null;
+            /** Format: uuid */
+            ownerId?: string | null;
+            status: components["schemas"]["FlowAccountStatus"];
+            notes?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: uri-reference */
+            profileImageUrl?: string | null;
+        };
+        CrmAccountCreateRequest: {
+            name: string;
+            industry?: string;
+            website?: string;
+            phone?: string;
+            address?: string;
+            /** Format: uuid */
+            ownerId?: string;
+            status?: components["schemas"]["FlowAccountStatus"];
+            notes?: string;
+        };
+        CrmAccountUpdateRequest: {
+            name?: string;
+            industry?: string | null;
+            website?: string | null;
+            phone?: string | null;
+            address?: string | null;
+            /** Format: uuid */
+            ownerId?: string | null;
+            status?: components["schemas"]["FlowAccountStatus"];
+            notes?: string | null;
+        };
+        CrmAccountListResponse: {
+            items: components["schemas"]["CrmAccount"][];
+            page: number;
+            pageSize: number;
+            total: number;
+        };
+        CrmContact: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            organizationId: string;
+            /** Format: uuid */
+            accountId?: string | null;
+            firstName: string;
+            lastName: string;
+            /** Format: email */
+            email?: string | null;
+            phone?: string | null;
+            jobTitle?: string | null;
+            /** Format: uuid */
+            ownerId?: string | null;
+            status: components["schemas"]["FlowContactStatus"];
+            notes?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+            /** Format: uri-reference */
+            profileImageUrl?: string | null;
+        };
+        CrmContactCreateRequest: {
+            /** Format: uuid */
+            accountId?: string;
+            firstName: string;
+            lastName: string;
+            /** Format: email */
+            email?: string;
+            phone?: string;
+            jobTitle?: string;
+            /** Format: uuid */
+            ownerId?: string;
+            status?: components["schemas"]["FlowContactStatus"];
+            notes?: string;
+        };
+        CrmContactUpdateRequest: {
+            /** Format: uuid */
+            accountId?: string | null;
+            firstName?: string;
+            lastName?: string;
+            /** Format: email */
+            email?: string | null;
+            phone?: string | null;
+            jobTitle?: string | null;
+            /** Format: uuid */
+            ownerId?: string | null;
+            status?: components["schemas"]["FlowContactStatus"];
+            notes?: string | null;
+        };
+        CrmContactListResponse: {
+            items: components["schemas"]["CrmContact"][];
+            page: number;
+            pageSize: number;
+            total: number;
+        };
+        CrmDeal: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            organizationId: string;
+            /** Format: uuid */
+            accountId?: string | null;
+            /** Format: uuid */
+            contactId?: string | null;
+            /** Format: uuid */
+            ownerId?: string | null;
+            name: string;
+            stage: components["schemas"]["FlowDealStage"];
+            /** Format: double */
+            amount: number;
+            currency: string;
+            /** Format: date */
+            expectedCloseDate?: string | null;
+            notes?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CrmDealCreateRequest: {
+            /** Format: uuid */
+            accountId?: string;
+            /** Format: uuid */
+            contactId?: string;
+            /** Format: uuid */
+            ownerId?: string;
+            name: string;
+            stage?: components["schemas"]["FlowDealStage"];
+            /**
+             * Format: double
+             * @default 0
+             */
+            amount: number;
+            /** @default USD */
+            currency: string;
+            /** Format: date */
+            expectedCloseDate?: string;
+            notes?: string;
+        };
+        CrmDealUpdateRequest: {
+            /** Format: uuid */
+            accountId?: string | null;
+            /** Format: uuid */
+            contactId?: string | null;
+            /** Format: uuid */
+            ownerId?: string | null;
+            name?: string;
+            stage?: components["schemas"]["FlowDealStage"];
+            /** Format: double */
+            amount?: number;
+            currency?: string;
+            /** Format: date */
+            expectedCloseDate?: string | null;
+            notes?: string | null;
+        };
+        CrmDealListResponse: {
+            items: components["schemas"]["CrmDeal"][];
+            page: number;
+            pageSize: number;
+            total: number;
+        };
+        CrmActivity: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            organizationId: string;
+            /** Format: uuid */
+            accountId?: string | null;
+            /** Format: uuid */
+            contactId?: string | null;
+            /** Format: uuid */
+            dealId?: string | null;
+            /** Format: uuid */
+            ownerId?: string | null;
+            kind: components["schemas"]["FlowActivityKind"];
+            status: components["schemas"]["FlowActivityStatus"];
+            subject: string;
+            description?: string | null;
+            /** Format: date-time */
+            dueAt?: string | null;
+            /** Format: date-time */
+            completedAt?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            updatedAt: string;
+        };
+        CrmActivityCreateRequest: {
+            /** Format: uuid */
+            accountId?: string;
+            /** Format: uuid */
+            contactId?: string;
+            /** Format: uuid */
+            dealId?: string;
+            /** Format: uuid */
+            ownerId?: string;
+            kind: components["schemas"]["FlowActivityKind"];
+            status?: components["schemas"]["FlowActivityStatus"];
+            subject: string;
+            description?: string;
+            /** Format: date-time */
+            dueAt?: string;
+        };
+        CrmActivityUpdateRequest: {
+            /** Format: uuid */
+            accountId?: string | null;
+            /** Format: uuid */
+            contactId?: string | null;
+            /** Format: uuid */
+            dealId?: string | null;
+            /** Format: uuid */
+            ownerId?: string | null;
+            kind?: components["schemas"]["FlowActivityKind"];
+            status?: components["schemas"]["FlowActivityStatus"];
+            subject?: string;
+            description?: string | null;
+            /** Format: date-time */
+            dueAt?: string | null;
+            /** Format: date-time */
+            completedAt?: string | null;
+        };
+        CrmActivityListResponse: {
+            items: components["schemas"]["CrmActivity"][];
+            page: number;
+            pageSize: number;
+            total: number;
+        };
+        CrmPipelineStageSummary: {
+            stage: components["schemas"]["FlowDealStage"];
+            count: number;
+            /** Format: double */
+            value: number;
+        };
+        CrmDashboardResponse: {
+            totalAccounts: number;
+            activeAccounts: number;
+            totalContacts: number;
+            totalDeals: number;
+            openDeals: number;
+            /** Format: double */
+            pipelineValue: number;
+            /** Format: double */
+            wonValue: number;
+            upcomingActivities: number;
+            pipeline: components["schemas"]["CrmPipelineStageSummary"][];
+        };
+        /** @enum {string} */
+        SyncEntity: "accounts" | "contacts" | "deals" | "activities";
+        /** @enum {string} */
+        SyncOperationKind: "upsert" | "delete";
+        SyncOperationRequest: {
+            /** Format: uuid */
+            opId: string;
+            deviceId: string;
+            entity: components["schemas"]["SyncEntity"];
+            /** Format: uuid */
+            entityId: string;
+            kind: components["schemas"]["SyncOperationKind"];
+            changes?: {
+                [key: string]: unknown;
+            } | null;
+            hlc: string;
+            schemaVersion: number;
+        };
+        SyncPushRequest: {
+            operations: components["schemas"]["SyncOperationRequest"][];
+        };
+        SyncOperationAcknowledgement: {
+            /** Format: uuid */
+            opId: string;
+            /** @enum {string} */
+            status: "accepted" | "rejected";
+            sequence?: number | null;
+            error?: string | null;
+        };
+        SyncPushResponse: {
+            acknowledgements: components["schemas"]["SyncOperationAcknowledgement"][];
+            nextCursor: number;
+        };
+        SyncChange: {
+            sequence: number;
+            /** Format: uuid */
+            opId: string;
+            deviceId: string;
+            entity: components["schemas"]["SyncEntity"];
+            /** Format: uuid */
+            entityId: string;
+            kind: components["schemas"]["SyncOperationKind"];
+            changes?: {
+                [key: string]: unknown;
+            } | null;
+            hlc: string;
+            schemaVersion: number;
+            /** Format: date-time */
+            occurredAt: string;
+        };
+        SyncPullResponse: {
+            changes: components["schemas"]["SyncChange"][];
+            nextCursor: number;
+            hasMore: boolean;
+        };
+        SyncStatusResponse: {
+            latestSequence: number;
+        };
+        SyncConflict: {
+            /** Format: uuid */
+            id: string;
+            /** Format: uuid */
+            organizationId: string;
+            entity: components["schemas"]["SyncEntity"];
+            /** Format: uuid */
+            entityId: string;
+            field: string;
+            localValue?: unknown;
+            remoteValue?: unknown;
+            localHlc: string;
+            remoteHlc: string;
+            remoteDeviceId: string;
+            /** @enum {string} */
+            status: "open" | "resolved";
+            /** Format: uuid */
+            resolutionOperationId?: string | null;
+            resolutionNote?: string | null;
+            /** Format: date-time */
+            createdAt: string;
+            /** Format: date-time */
+            resolvedAt?: string | null;
+        };
+        SyncConflictListResponse: {
+            items: components["schemas"]["SyncConflict"][];
+        };
+        SyncConflictResolutionRequest: {
+            /** @enum {string} */
+            choice: "mine" | "theirs" | "custom";
+            value?: unknown;
+            deviceId: string;
+            hlc: string;
+            note?: string;
+        };
+        SyncHistoryItem: {
+            sequence: number;
+            /** Format: uuid */
+            opId: string;
+            deviceId: string;
+            entity: components["schemas"]["SyncEntity"];
+            /** Format: uuid */
+            entityId: string;
+            kind: components["schemas"]["SyncOperationKind"];
+            changes: {
+                [key: string]: unknown;
+            } | null;
+            hlc: string;
+            schemaVersion: number;
+            /** Format: date-time */
+            occurredAt: string;
+            /** @enum {string} */
+            status: "accepted" | "rejected";
+        };
+        SyncHistoryResponse: {
+            items: components["schemas"]["SyncHistoryItem"][];
         };
         DashboardResponse: {
             totalUsers: number;
@@ -2583,6 +3331,794 @@ export interface operations {
             409: components["responses"]["Conflict"];
             422: components["responses"]["ValidationError"];
             429: components["responses"]["TooManyRequests"];
+        };
+    };
+    getCrmDashboard: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description CRM dashboard metrics */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmDashboardResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            429: components["responses"]["TooManyRequests"];
+        };
+    };
+    listCrmAccounts: {
+        parameters: {
+            query?: {
+                /** @description One-based page number. */
+                page?: components["parameters"]["Page"];
+                /** @description Number of records per page. */
+                pageSize?: components["parameters"]["PageSize"];
+                /** @description Case-insensitive name or email search. */
+                search?: components["parameters"]["Search"];
+                status?: components["schemas"]["FlowAccountStatus"];
+            };
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated account list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmAccountListResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["TooManyRequests"];
+        };
+    };
+    createCrmAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmAccountCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Account created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmAccount"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    getCrmAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmAccount"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteCrmAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Account deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateCrmAccount: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmAccountUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Account updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmAccount"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    listCrmContacts: {
+        parameters: {
+            query?: {
+                /** @description One-based page number. */
+                page?: components["parameters"]["Page"];
+                /** @description Number of records per page. */
+                pageSize?: components["parameters"]["PageSize"];
+                /** @description Case-insensitive name or email search. */
+                search?: components["parameters"]["Search"];
+                status?: components["schemas"]["FlowContactStatus"];
+            };
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated contact list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmContactListResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["TooManyRequests"];
+        };
+    };
+    createCrmContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmContactCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Contact created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmContact"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    getCrmContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                contactId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Contact */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmContact"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteCrmContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                contactId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Contact deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateCrmContact: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                contactId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmContactUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Contact updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmContact"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    listCrmDeals: {
+        parameters: {
+            query?: {
+                /** @description One-based page number. */
+                page?: components["parameters"]["Page"];
+                /** @description Number of records per page. */
+                pageSize?: components["parameters"]["PageSize"];
+                /** @description Case-insensitive name or email search. */
+                search?: components["parameters"]["Search"];
+                stage?: components["schemas"]["FlowDealStage"];
+            };
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated deal list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmDealListResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["TooManyRequests"];
+        };
+    };
+    createCrmDeal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmDealCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Deal created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmDeal"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    getCrmDeal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                dealId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deal */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmDeal"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteCrmDeal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                dealId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Deal deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateCrmDeal: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                dealId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmDealUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Deal updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmDeal"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    listCrmActivities: {
+        parameters: {
+            query?: {
+                /** @description One-based page number. */
+                page?: components["parameters"]["Page"];
+                /** @description Number of records per page. */
+                pageSize?: components["parameters"]["PageSize"];
+                /** @description Case-insensitive name or email search. */
+                search?: components["parameters"]["Search"];
+                status?: components["schemas"]["FlowActivityStatus"];
+            };
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Paginated activity list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmActivityListResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            429: components["responses"]["TooManyRequests"];
+        };
+    };
+    createCrmActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmActivityCreateRequest"];
+            };
+        };
+        responses: {
+            /** @description Activity created */
+            201: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmActivity"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    getCrmActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                activityId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Activity */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmActivity"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    deleteCrmActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                activityId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Activity deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    updateCrmActivity: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                activityId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["CrmActivityUpdateRequest"];
+            };
+        };
+        responses: {
+            /** @description Activity updated */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmActivity"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    pushSyncOperations: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncPushRequest"];
+            };
+        };
+        responses: {
+            /** @description Per-operation acknowledgements */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncPushResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    pullSyncOperations: {
+        parameters: {
+            query?: {
+                cursor?: number;
+                limit?: number;
+            };
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Cursor page of accepted operations */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncPullResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    getSyncStatus: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Sync status */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncStatusResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    listSyncConflicts: {
+        parameters: {
+            query?: {
+                status?: "open" | "resolved";
+            };
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Conflict list */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncConflictListResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+        };
+    };
+    resolveSyncConflict: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                conflictId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "application/json": components["schemas"]["SyncConflictResolutionRequest"];
+            };
+        };
+        responses: {
+            /** @description Resolved conflict */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncConflict"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            409: components["responses"]["Conflict"];
+        };
+    };
+    listSyncHistory: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                entity: components["schemas"]["SyncEntity"];
+                entityId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Operation history */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["SyncHistoryResponse"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
         };
     };
     getUserActivity: {
@@ -4368,6 +5904,186 @@ export interface operations {
             422: components["responses"]["ValidationError"];
             429: components["responses"]["TooManyRequests"];
             500: components["responses"]["InternalError"];
+        };
+    };
+    getAccountProfileImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Account profile image */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                    "image/png": string;
+                    "image/webp": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    uploadAccountProfileImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated account */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmAccount"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            413: components["responses"]["PayloadTooLarge"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    deleteAccountProfileImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                accountId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Account profile image deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    getContactProfileImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                contactId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Contact profile image */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "image/jpeg": string;
+                    "image/png": string;
+                    "image/webp": string;
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+        };
+    };
+    uploadContactProfileImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                contactId: string;
+            };
+            cookie?: never;
+        };
+        requestBody: {
+            content: {
+                "multipart/form-data": {
+                    /** Format: binary */
+                    file: string;
+                };
+            };
+        };
+        responses: {
+            /** @description Updated contact */
+            200: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content: {
+                    "application/json": components["schemas"]["CrmContact"];
+                };
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
+            413: components["responses"]["PayloadTooLarge"];
+            422: components["responses"]["ValidationError"];
+        };
+    };
+    deleteContactProfileImage: {
+        parameters: {
+            query?: never;
+            header?: never;
+            path: {
+                /** @description Organization UUID used to establish tenant context. */
+                organizationId: components["parameters"]["OrganizationId"];
+                contactId: string;
+            };
+            cookie?: never;
+        };
+        requestBody?: never;
+        responses: {
+            /** @description Contact profile image deleted */
+            204: {
+                headers: {
+                    [name: string]: unknown;
+                };
+                content?: never;
+            };
+            401: components["responses"]["Unauthorized"];
+            403: components["responses"]["Forbidden"];
+            404: components["responses"]["NotFound"];
         };
     };
 }

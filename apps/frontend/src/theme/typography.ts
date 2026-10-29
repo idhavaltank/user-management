@@ -22,7 +22,9 @@ export function responsiveFontSizes({ sm, md, lg }: { sm: number; md: number; lg
 
 // ----------------------------------------------------------------------
 
-const FONT_PRIMARY = 'Public Sans, sans-serif'; // Google Font
+// Inter matches the approved FlowSync design reference and remains a safe
+// system fallback when the bundled/web font is unavailable.
+const FONT_PRIMARY = 'Inter, "Segoe UI", sans-serif';
 // const FONT_SECONDARY = 'CircularStd, sans-serif'; // Local Font
 
 const typography = {

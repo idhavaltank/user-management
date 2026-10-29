@@ -21,6 +21,7 @@
     "db:migrate": "nx run backend:migrate",
     "db:current": "nx run backend:migration-current",
     "db:history": "nx run backend:migration-history",
+    "db:seed-loadtest": "nx run backend:seed-loadtest",
     "generate:api-types": "nx run frontend:generate-api-types",
     "check:generated": "./scripts/check_generated.sh",
     "validate:api": "./scripts/validate_api_contract.sh",

@@ -4,6 +4,8 @@ import { authLoggedOut, restoreSession } from './redux/actions/authAction';
 import { useAppDispatch } from './redux/hooks';
 import Router from './routes';
 import ThemeProvider from './theme';
+import { OfflineStorageProvider } from './offline/OfflineStorageProvider';
+import { SyncProvider } from './offline/syncProvider';
 
 const App = (): JSX.Element => {
   const dispatch = useAppDispatch();
@@ -20,7 +22,11 @@ const App = (): JSX.Element => {
 
   return (
     <ThemeProvider>
-      <Router />
+      <OfflineStorageProvider>
+        <SyncProvider>
+          <Router />
+        </SyncProvider>
+      </OfflineStorageProvider>
     </ThemeProvider>
   );
 };

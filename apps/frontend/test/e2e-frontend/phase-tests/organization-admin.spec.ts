@@ -21,7 +21,7 @@ test('admin can inspect the organization administration surface', async ({ page 
   await page.getByLabel('Password').fill(ADMIN.password);
   await page.getByRole('button', { name: 'Sign in' }).click();
   expect((await loginResponsePromise).status()).toBe(200);
-  await expect(page.getByRole('heading', { name: 'User Management', level: 4 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Good morning, welcome back/ })).toBeVisible();
 
   await page.goto(`${URLS.FRONTEND}/admin`);
   await expect(page.getByRole('heading', { name: 'Organization administration' })).toBeVisible();

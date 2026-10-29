@@ -145,3 +145,93 @@ def test_authenticated_crud_contract_against_postgresql() -> None:
 
         asyncio.run(expire_session())
         assert client.get("/api/v1/auth/me").status_code == 401
+
+
+def test_profile_image_upload_contract_against_postgresql(tmp_path) -> None:
+    """Exercise account/contact image upload, retrieval, rejection, and delete."""
+
+    database_url = os.environ["TEST_DATABASE_URL"]
+    admin_email = "media-integration-admin@example.com"
+    admin_password = "media-integration-admin-password"
+    settings = Settings(
+        environment="test",
+        database_url=database_url,
+        trusted_hosts=["testserver"],
+        rate_limit_enabled=False,
+        media_storage_path=str(tmp_path),
+        bootstrap_admin_email=admin_email,
+        bootstrap_admin_password=admin_password,
+    )
+
+    png = b"\x89PNG\r\n\x1a\nprofile-image-fixture"
+    with TestClient(create_app(settings)) as client:
+        login = client.post(
+            "/api/v1/auth/login",
+            json={"email": admin_email, "password": admin_password},
+        )
+        assert login.status_code == 200
+        csrf = login.json()["csrfToken"]
+        headers = {"X-CSRF-Token": csrf}
+
+        organizations = client.get("/api/v1/organizations")
+        assert organizations.status_code == 200
+        organization_id = organizations.json()["items"][0]["id"]
+
+        account = client.post(
+            f"/api/v1/organizations/{organization_id}/accounts",
+            json={"name": f"Media Account {uuid4()}"},
+            headers=headers,
+        )
+        assert account.status_code == 201
+        account_id = account.json()["id"]
+
+        contact = client.post(
+            f"/api/v1/organizations/{organization_id}/contacts",
+            json={"firstName": "Media", "lastName": "Contact"},
+            headers=headers,
+        )
+        assert contact.status_code == 201
+        contact_id = contact.json()["id"]
+
+        account_upload = client.post(
+            f"/api/v1/organizations/{organization_id}/accounts/{account_id}/profile-image",
+            files={"file": ("account.png", png, "image/png")},
+            headers=headers,
+        )
+        assert account_upload.status_code == 200
+        assert account_upload.json()["profileImageUrl"].endswith("/profile-image")
+
+        account_image = client.get(
+            f"/api/v1/organizations/{organization_id}/accounts/{account_id}/profile-image"
+        )
+        assert account_image.status_code == 200
+        assert account_image.headers["content-type"] == "image/png"
+        assert account_image.content == png
+
+        invalid_upload = client.post(
+            f"/api/v1/organizations/{organization_id}/contacts/{contact_id}/profile-image",
+            files={"file": ("contact.txt", b"not-an-image", "text/plain")},
+            headers=headers,
+        )
+        assert invalid_upload.status_code == 422
+        assert invalid_upload.json()["code"] == "invalid_profile_image"
+
+        contact_upload = client.post(
+            f"/api/v1/organizations/{organization_id}/contacts/{contact_id}/profile-image",
+            files={"file": ("contact.png", png, "image/png")},
+            headers=headers,
+        )
+        assert contact_upload.status_code == 200
+        assert contact_upload.json()["profileImageUrl"].endswith("/profile-image")
+
+        deleted = client.delete(
+            f"/api/v1/organizations/{organization_id}/accounts/{account_id}/profile-image",
+            headers=headers,
+        )
+        assert deleted.status_code == 204
+        assert (
+            client.get(
+                f"/api/v1/organizations/{organization_id}/accounts/{account_id}/profile-image"
+            ).status_code
+            == 404
+        )

@@ -1,13 +1,22 @@
-# User Management Monorepo
+# FlowSync CRM Monorepo
 
-This repository contains the complete user-management system in one Nx-based
+This repository contains the FlowSync CRM product in one Nx-based
 polyglot monorepo:
 
-- React + TypeScript + Vite frontend
+- React + TypeScript + Vite frontend with Material UI FlowSync tokens
 - Python + FastAPI backend
 - PostgreSQL persistence
 - Redis-backed rate limiting
 - OpenAPI-driven frontend API types
+
+The current product slice includes the online CRM foundation and a verified
+offline/sync foundation: organization-scoped accounts, contacts, activities,
+deals, dashboard metrics, a typed IndexedDB adapter, a memory test adapter,
+atomic local-mutation outbox, cursor-based server sync, conflict review, and
+record history. CRM entity pages support cached reads plus optimistic
+create/update/delete while offline. The remaining roadmap is production-scale
+benchmarking, SQLite WASM/OPFS validation, richer collaboration, and hosted
+operations; see the progress record for exact boundaries.
 
 Nx coordinates the applications and developer commands. The frontend keeps its
 Node dependencies in `apps/frontend/package.json`; the backend keeps its Python
@@ -17,21 +26,21 @@ dependencies in `apps/backend/pyproject.toml` and is managed with `uv`.
 
 ```text
 Browser
+  ├── apps/frontend  ── credentialed HTTP ──►  apps/backend
+  │   React/Vite                              FastAPI
+  │       │                                        │
+  │       └── IndexedDB + outbox                  ├── PostgreSQL
+  │           (CRM local foundation)              └── Redis
   │
-  ▼
-apps/frontend  ── credentialed HTTP ──►  apps/backend
- React/Vite                              FastAPI
-                                             │
-                              ┌──────────────┴──────────────┐
-                              ▼                             ▼
-                         PostgreSQL                      Redis
-                       users/sessions              shared rate limits
+  └── IndexedDB + outbox + HLC sync engine + conflict queue
 ```
 
 The backend is a modular monolith with API routers, services, SQLAlchemy
 models, and shared security/infrastructure code. The frontend is a component-
 based React application with typed API clients, Redux state, protected routes,
-and Material UI.
+Material UI, and an offline storage port. IndexedDB is the current browser
+adapter; SQLite WASM/OPFS is intentionally deferred until a benchmark justifies
+the additional runtime and migration complexity.
 
 ## Repository layout
 
@@ -41,7 +50,8 @@ user-management/
 │   ├── frontend/              # React, TypeScript, Vite, Redux, Playwright
 │   └── backend/               # FastAPI, SQLAlchemy, Alembic, pytest
 ├── docs/
-│   └── api/openapi.yaml       # API contract used to generate frontend types
+│   ├── api/openapi.yaml       # API contract used to generate frontend types
+│   └── architecture/         # Architecture notes and phase boundaries
 ├── infra/                     # Reserved for deployment/infrastructure assets
 ├── scripts/                   # Reserved for root automation scripts
 ├── nx.json                    # Nx targets, caching, and workspace defaults
@@ -139,6 +149,53 @@ Confirm the current migration:
 npm run db:current
 ```
 
+### Seed local load-test data
+
+After migrations and the first administrator are available, seed a repeatable
+local dataset for pagination, search, dashboard, and profile-image testing:
+
+```bash
+SEED_USER_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_urlsafe(18))')" \
+  npm run db:seed-loadtest -- \
+  --users 50 \
+  --accounts 1000 \
+  --contacts 1000 \
+  --deals 1000 \
+  --activities 1000
+```
+
+The command is local-only, organization-scoped to `local`, deterministic, and
+idempotent. It creates 50 test users and up to 2,000 records for each CRM
+entity. Seed users use the pattern
+`flowsync-load-user-0001@loadtest.dev`; keep the password in your local
+shell or ignored environment file and never commit or publish it. Counts can
+be overridden from 1 through 2,000:
+
+```bash
+npm run db:seed-loadtest -- --users 50 --accounts 2000 --contacts 1500 --deals 2000 --activities 2000
+```
+
+The seed data is intended for local browser and API load checks. It does not
+replace a real k6/production-capacity test and it does not touch production
+data.
+
+For a large per-user dataset, use PostgreSQL bulk mode. This creates 10,000
+records for every generated user in each CRM entity (40 million records for
+1,000 users):
+
+```bash
+SEED_USER_PASSWORD="<your-local-password>" \
+  npm run db:seed-loadtest -- \
+  --users 1000 \
+  --records-per-user 10000 \
+  --user-batch-size 10
+```
+
+Bulk mode generates rows inside PostgreSQL, commits every user batch, uses
+deterministic IDs, and can resume safely after interruption. It requires
+substantial disk space and is intended for a local performance dataset, not a
+production migration or capacity result.
+
 ### 3. Start frontend and backend
 
 Start both applications through Nx:
@@ -199,7 +256,12 @@ npm run test:e2e
 E2E tests expect the backend and frontend to already be running. In a separate
 terminal, use `npm run dev:all` before running this command. Playwright defaults
 to the monorepo frontend port, 3001; override `FRONTEND_URL` and `API_URL` when
-testing another environment.
+testing another environment. Set `E2E_ADMIN_EMAIL` and `E2E_ADMIN_PASSWORD`
+to the same local bootstrap account configured in `apps/backend/.env`; the
+frontend `.env.example` intentionally contains a placeholder, never a real
+password. The local login rate limit is intentionally strict, so repeated
+debug runs should use a disposable isolated backend or wait for the configured
+window to expire.
 
 Generate TypeScript API types from the checked-in OpenAPI contract:
 
@@ -215,6 +277,23 @@ Check both generated API artifacts:
 ```bash
 npm run check:generated
 ```
+
+The offline foundation is documented in
+[`docs/architecture/flowsync-offline-foundation.md`](docs/architecture/flowsync-offline-foundation.md).
+The memory adapter is used for deterministic unit tests. The real IndexedDB
+adapter is checked in Chrome by
+`apps/frontend/test/e2e-frontend/phase-tests/offline-storage.spec.ts`.
+
+Sync and operational boundaries are documented in
+[`docs/conflict-policy.md`](docs/conflict-policy.md),
+[`docs/operations/flowsync-resilience-runbook.md`](docs/operations/flowsync-resilience-runbook.md),
+and the current roadmap status in
+[`docs/plans/user-management-full/flowsync-roadmap-progress.md`](docs/plans/user-management-full/flowsync-roadmap-progress.md).
+
+For a complete product reference, see the
+[`FlowSync product documentation`](docs/product/flowsync-product-documentation.md)
+and the plain-language
+[`feature and module guide`](docs/guides/flowsync-feature-and-module-guide.md).
 
 ## Backend commands
 
@@ -253,6 +332,7 @@ The backend exposes:
 - `GET /api/v1/auth/me`
 - `GET /api/v1/auth/csrf`
 - `GET /api/v1/organizations`
+- Organization-scoped CRM CRUD for accounts, contacts, activities, and deals, plus dashboard aggregates.
 - Organization-scoped user CRUD, lifecycle, bulk, CSV, audit, roles, teams, invitations, notifications, settings, jobs, and API keys
 - Organization administration is available at `/admin` for settings, roles and permissions, teams, invitations, audit history, API keys, and CSV/job operations.
 - Session password/recovery/verification flows plus local TOTP enrollment
@@ -385,3 +465,22 @@ Pull requests should run at least:
 
 The frontend and backend remain independently deployable even though they are
 versioned in one repository.
+
+## CRM profile images
+
+Accounts and contacts support organization-scoped profile-image upload,
+retrieval, replacement, and removal from their detail pages. The local adapter
+stores files under `apps/backend/var/media/` and stores only metadata in
+PostgreSQL. The directory is ignored by Git.
+
+- Supported content: JPEG, PNG, and WebP.
+- Default maximum size: 5 MB (`PROFILE_IMAGE_MAX_BYTES`).
+- Storage root: `MEDIA_STORAGE_PATH` (default `var/media`).
+- Uploads require an authenticated online session and `crm.write` permission.
+- Binary images are intentionally not placed in the IndexedDB sync outbox;
+  offline CRM records remain usable, while image operations wait for a
+  connection.
+
+The UI exposes upload, replacement, and removal on account and contact detail
+pages. The API routes are documented in `docs/api/openapi.yaml` and are also
+visible in Swagger at `/docs`.

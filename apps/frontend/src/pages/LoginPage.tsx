@@ -22,7 +22,7 @@ const LoginPage = (): JSX.Element => {
   } = form;
 
   if (status === 'authenticated') {
-    return <Navigate to="/user" replace />;
+    return <Navigate to="/dashboard" replace />;
   }
 
   const onSubmit: SubmitHandler<LoginRequest> = async (credentials) => {
@@ -30,7 +30,7 @@ const LoginPage = (): JSX.Element => {
 
     try {
       await loginUser(dispatch, credentials);
-      navigate('/user', { replace: true });
+      navigate('/dashboard', { replace: true });
     } catch {
       // The auth reducer exposes the normalized error to the form.
     } finally {
@@ -44,7 +44,7 @@ const LoginPage = (): JSX.Element => {
         <Stack spacing={3} component="form" onSubmit={handleSubmit(onSubmit)}>
           <Stack spacing={1}>
             <Typography variant="h4">Sign in</Typography>
-            <Typography color="text.secondary">Authenticate to manage users.</Typography>
+            <Typography color="text.secondary">Sign in to your FlowSync workspace.</Typography>
           </Stack>
 
           {error && <Alert severity="error">{error}</Alert>}

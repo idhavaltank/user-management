@@ -18,6 +18,10 @@ const GlobalStyles = () => (
           padding: 0,
           width: '100%',
           height: '100%',
+          backgroundColor: '#F5F5DC',
+          color: '#24170F',
+          WebkitFontSmoothing: 'antialiased',
+          MozOsxFontSmoothing: 'grayscale',
         },
         '#root': {
           width: '100%',
@@ -39,6 +43,10 @@ const GlobalStyles = () => (
         img: {
           display: 'block',
           maxWidth: '100%',
+        },
+        '::selection': {
+          backgroundColor: '#D47E30',
+          color: '#24170F',
         },
         ul: {
           margin: 0,

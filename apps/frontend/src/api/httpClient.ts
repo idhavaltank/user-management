@@ -26,6 +26,11 @@ const resolveApiBaseUrl = (): string => {
 
 export const API_BASE_URL = resolveApiBaseUrl();
 
+/** Resolve an API-provided media path for an image rendered by the frontend. */
+export const resolveApiAssetUrl = (path: string | null | undefined): string | undefined => (
+  path ? (path.startsWith('http') ? path : `${API_BASE_URL}${path}`) : undefined
+);
+
 const UNSAFE_METHODS = new Set(['POST', 'PATCH', 'PUT', 'DELETE']);
 
 /** A small transport port that keeps feature APIs independent from fetch. */

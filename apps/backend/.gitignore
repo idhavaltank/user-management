@@ -1,5 +1,7 @@
 # Local secrets and environment-specific configuration.
 .env
+# Local uploaded profile images are runtime data and must never be committed.
+var/media/
 # Virtual environment created by uv.
 .venv/
 # Python bytecode and test/lint caches.

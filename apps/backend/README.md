@@ -1,17 +1,16 @@
-# User Management API
+# FlowSync CRM API
 
 > This backend is part of the Nx monorepo. For complete local setup and
 > frontend/backend orchestration, start with the repository-root README.
 
-FastAPI backend for the user-management application. It provides authenticated
-user-management APIs, PostgreSQL persistence, Redis-backed rate limiting,
-versioned Alembic migrations, and an OpenAPI contract consumed by the
-TypeScript frontend.
+FastAPI backend for FlowSync. It provides authenticated CRM and user-management
+APIs, PostgreSQL persistence, Redis-backed rate limiting, versioned Alembic
+migrations, and an OpenAPI contract consumed by the TypeScript frontend.
 
 ## Responsibilities
 
-- Expose health, readiness, authentication, organization, user-management, and
-  operational endpoints.
+- Expose health, readiness, authentication, organization, CRM, user-management,
+  and operational endpoints.
 - Validate request payloads and return consistent API error responses.
 - Store users and browser sessions in PostgreSQL.
 - Hash passwords before persistence; raw passwords are never stored.
@@ -21,6 +20,10 @@ TypeScript frontend.
 - Soft-delete user records instead of physically removing them.
 - Apply request and login rate limits.
 - Enforce organization membership and permission checks on tenant-scoped routes.
+- Provide organization-scoped FlowSync accounts, contacts, deals, activities,
+  and dashboard aggregates.
+- Persist idempotent offline operations with cursor-based push/pull, tombstones,
+  deterministic field clocks, conflict review, and record history.
 - Provide bounded bulk/import/export job records, audit logs, notifications,
   invitations, teams, API-key management, and local MFA primitives.
 
@@ -138,6 +141,8 @@ app/core/config.py. Environment values override code defaults.
 | BOOTSTRAP_ADMIN_PASSWORD   | Local first-admin password; never commit it               |
 | BOOTSTRAP_ADMIN_NAME       | Display name for the bootstrap administrator              |
 | BOOTSTRAP_ADMIN_BIRTH_DATE | Optional bootstrap administrator birth date               |
+| MEDIA_STORAGE_PATH         | Local profile-image storage root                          |
+| PROFILE_IMAGE_MAX_BYTES    | Maximum account/contact profile-image size                |
 
 `ENVIRONMENT=local` selects the in-memory delivery sink for password-reset,
 email-verification, and invitation tokens. Raw values are available only to
@@ -211,11 +216,70 @@ uv run alembic upgrade head
 uv run alembic current
 ```
 
-The migration chain currently ends at `20261023_0007`. It creates the users and
+The migration chain currently ends at `20261023_0012`. It creates the users and
 session foundation, lifecycle/token tables, organizations/roles/permissions,
 teams, invitations, notifications/preferences, audit logs, API-key metadata,
-durable jobs, and import previews. It also backfills the deterministic local
-organization and memberships for the existing baseline users.
+durable jobs, import previews, FlowSync CRM tables, sync operation metadata, and
+conflict records. It also adds account/contact profile-image metadata and
+backfills the deterministic local organization and memberships for the existing
+baseline users.
+
+### Seed local load-test data
+
+From the repository root, run:
+
+```bash
+SEED_USER_PASSWORD="$(python3 -c 'import secrets; print(secrets.token_urlsafe(18))')" \
+  npm run db:seed-loadtest -- \
+  --users 50 --accounts 1000 --contacts 1000 --deals 1000 --activities 1000
+```
+
+The seed script is intentionally limited to local development. It creates or
+reuses the `local` organization, generates 50 deterministic test users, and
+creates up to 2,000 accounts, contacts, deals, and activities per invocation.
+It is safe to rerun with the same counts: records are identified by stable
+`FlowSync Load Test` names and are not duplicated. The password must be at
+least 12 characters. Set it only in the current shell or an ignored
+`apps/backend/.env` entry named `SEED_USER_PASSWORD`; never commit it. Generated
+emails use the `@loadtest.dev` domain so they satisfy the API's email contract
+without representing real customer addresses.
+
+When rerunning the command, the supplied password is applied to the generated
+seed users. This lets a developer rotate the local test password deliberately
+without exposing a generated credential.
+
+Supported options:
+
+| Option | Default | Range / purpose |
+| --- | ---: | --- |
+| `--organization-slug` | `local` | Target organization slug |
+| `--users` | `50` | Generated test users, 1–2,000 |
+| `--accounts` | `1000` | Accounts, 1–2,000 |
+| `--contacts` | `1000` | Contacts, 1–2,000 |
+| `--deals` | `1000` | Deals, 1–2,000 |
+| `--activities` | `1000` | Activities, 1–2,000 |
+| `--records-per-user` | unset | Bulk mode: 1–100,000 per entity per user |
+| `--user-batch-size` | `10` | Bulk transaction size, 1–100 users |
+
+The seeded dataset is suitable for browser pagination/search checks and local
+API profiling. It is not a production-capacity benchmark. The script does not
+upload binary images automatically; use the CRM detail-page upload flow to
+exercise real multipart image requests.
+
+For a large per-user dataset, use PostgreSQL bulk mode:
+
+```bash
+SEED_USER_PASSWORD="<your-local-password>" \
+  npm run db:seed-loadtest -- \
+  --users 1000 --records-per-user 10000 --user-batch-size 10
+```
+
+This creates 10,000 accounts, 10,000 contacts, 10,000 deals, and 10,000
+activities for every generated user: 40 million records in total. Bulk mode
+uses deterministic UUIDs, server-side `generate_series`, and a committed
+transaction per user batch. Rerunning the same command is safe and resumes
+without duplicate bulk rows. `--records-per-user` accepts 1–100,000, but the
+required disk space grows linearly and should be checked before increasing it.
 
 ### 4. Start FastAPI
 
@@ -274,6 +338,23 @@ session.
 | POST   | /api/v1/organizations/{organizationId}/users/import/preview | Validate CSV | Permission + CSRF |
 | POST   | /api/v1/organizations/{organizationId}/users/import/commit | Commit preview | Permission + CSRF |
 | GET    | /api/v1/organizations/{organizationId}/dashboard | Dashboard counts | Membership + permission |
+| GET    | /api/v1/organizations/{organizationId}/crm/dashboard | FlowSync CRM metrics and pipeline | CRM read permission |
+| GET/POST | /api/v1/organizations/{organizationId}/accounts | Account list/create | CRM read/write + CSRF for create |
+| GET/PATCH/DELETE | /api/v1/organizations/{organizationId}/accounts/{accountId} | Account detail and CRUD | CRM permission + CSRF for mutations |
+| GET/POST | /api/v1/organizations/{organizationId}/contacts | Contact list/create | CRM read/write + CSRF for create |
+| GET/PATCH/DELETE | /api/v1/organizations/{organizationId}/contacts/{contactId} | Contact detail and CRUD | CRM permission + CSRF for mutations |
+| GET/POST | /api/v1/organizations/{organizationId}/deals | Deal list/create | CRM read/write + CSRF for create |
+| GET/PATCH/DELETE | /api/v1/organizations/{organizationId}/deals/{dealId} | Deal detail and CRUD | CRM permission + CSRF for mutations |
+| GET/POST | /api/v1/organizations/{organizationId}/activities | Activity list/create | CRM read/write + CSRF for create |
+| GET/PATCH/DELETE | /api/v1/organizations/{organizationId}/activities/{activityId} | Activity detail and CRUD | CRM permission + CSRF for mutations |
+| POST/GET/DELETE | /api/v1/organizations/{organizationId}/accounts/{accountId}/profile-image | Account profile image upload, retrieval, and removal | CRM read/write + CSRF for mutations |
+| POST/GET/DELETE | /api/v1/organizations/{organizationId}/contacts/{contactId}/profile-image | Contact profile image upload, retrieval, and removal | CRM read/write + CSRF for mutations |
+| POST | /api/v1/organizations/{organizationId}/sync/push | Idempotent offline operation batch | CRM write + CSRF |
+| GET | /api/v1/organizations/{organizationId}/sync/pull | Cursor-based accepted operation feed | CRM read |
+| GET | /api/v1/organizations/{organizationId}/sync/status | Latest organization cursor | CRM read |
+| GET | /api/v1/organizations/{organizationId}/sync/conflicts | Open/resolved conflict queue | CRM read |
+| POST | /api/v1/organizations/{organizationId}/sync/conflicts/{conflictId}/resolve | Resolve via a new sync operation | CRM write + CSRF |
+| GET | /api/v1/organizations/{organizationId}/sync/history/{entity}/{entityId} | Record operation history | CRM read |
 | GET    | /api/v1/organizations/{organizationId}/audit-logs | Paginated audit events | Audit permission |
 | GET    | /api/v1/organizations/{organizationId}/jobs | Paginated job history | Membership + permission |
 | GET    | /api/v1/organizations/{organizationId}/jobs/{jobId} | Job status | Membership + permission |
@@ -283,6 +364,22 @@ session.
 
 The original `/api/v1/users` CRUD routes remain available as a compatibility
 adapter for older clients. New UI code should use organization-scoped routes.
+
+### Profile-image storage behavior
+
+Account and contact profile images are validated by content signature and
+declared MIME type, not by filename alone. JPEG, PNG, and WebP are accepted up
+to `PROFILE_IMAGE_MAX_BYTES` (5 MB by default). The local storage adapter writes
+files atomically below `MEDIA_STORAGE_PATH`, while PostgreSQL stores the key,
+MIME type, byte size, and SHA-256 checksum. The API returns a relative
+`profileImageUrl` in the CRM record and serves the binary only after the same
+organization permission check.
+
+This first implementation is online-only by design: image bytes are not sent
+through the IndexedDB operation outbox. Offline CRM records continue to work,
+and a profile-image action can be retried after connectivity returns. A future
+object-storage adapter can implement the same service boundary without
+changing the CRM API contract.
 
 List controls supported by GET /api/v1/users include page, pageSize, search,
 sort, and order. The supported sort fields are name, email, birthDate,

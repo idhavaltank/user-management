@@ -18,7 +18,7 @@ class Settings(BaseSettings):
     """Validated runtime configuration for the API process."""
 
     # General process identity and environment selection.
-    app_name: str = "User Management API"
+    app_name: str = "FlowSync CRM API"
     environment: Literal["local", "test", "staging", "production"] = "local"
     # These values are shared with Docker Compose for the local PostgreSQL
     # container. They also allow the safe .env.example DATABASE_URL template
@@ -64,6 +64,11 @@ class Settings(BaseSettings):
     rate_limit_window_seconds: int = Field(default=60, ge=1)
     rate_limit_login_requests: int = Field(default=5, ge=1)
     redis_url: str | None = None
+    # Local profile images are stored outside the database through the
+    # replaceable media adapter. Production should point this at durable
+    # object-backed storage or a mounted persistent volume.
+    media_storage_path: str = "var/media"
+    profile_image_max_bytes: int = Field(default=5_242_880, ge=1_024, le=52_428_800)
     # Optional local/test bootstrap. Production credentials must come from a
     # secret manager or another approved provisioning workflow.
     bootstrap_admin_email: str | None = None

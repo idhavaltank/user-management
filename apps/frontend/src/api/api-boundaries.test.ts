@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 import { createAuthApi } from './authApi';
 import type { HttpClient } from './httpClient';
 import { createOrganizationApi } from './organizationApi';
+import { createCrmApi } from './crmApi';
 import { createUserApi } from './userApi';
 
 describe('API capability boundaries', () => {
@@ -145,5 +146,24 @@ describe('API capability boundaries', () => {
       expect.objectContaining({ method: 'POST', body: expect.any(FormData) })
     );
     expect(request).toHaveBeenNthCalledWith(2, '/api/v1/organizations/org-1/jobs/job%2F1');
+  });
+
+  test('CRM capability keeps dashboard and mutation paths tenant-scoped', async () => {
+    request.mockResolvedValue({ items: [], page: 1, pageSize: 20, total: 0 });
+    const crmApi = createCrmApi(client);
+
+    await crmApi.getDashboard('org/1');
+    await crmApi.listAccounts('org/1', { search: 'Acme', status: 'prospect' });
+    await crmApi.createDeal('org/1', { name: 'Renewal', amount: 1000, currency: 'USD' });
+
+    expect(request).toHaveBeenNthCalledWith(1, '/api/v1/organizations/org%2F1/crm/dashboard');
+    expect(request).toHaveBeenNthCalledWith(
+      2,
+      '/api/v1/organizations/org%2F1/accounts?search=Acme&status=prospect'
+    );
+    expect(request).toHaveBeenNthCalledWith(3, '/api/v1/organizations/org%2F1/deals', {
+      method: 'POST',
+      body: JSON.stringify({ name: 'Renewal', amount: 1000, currency: 'USD' }),
+    });
   });
 });

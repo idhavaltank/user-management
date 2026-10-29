@@ -86,7 +86,7 @@ async def ensure_bootstrap_admin(
             await session.commit()
             telemetry.info(
                 "bootstrap.admin.ready",
-                {"email": email, "created": created},
+                {"provisioned": True, "created": created},
             )
     except SQLAlchemyError as exc:
         telemetry.error("bootstrap.admin.skipped", {"reason": "database_unavailable"}, error=exc)

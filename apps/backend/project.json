@@ -38,6 +38,13 @@
         "cwd": "apps/backend"
       }
     },
+    "seed-loadtest": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "uv run python -m scripts.seed_load_test_data",
+        "cwd": "apps/backend"
+      }
+    },
     "test": {
       "executor": "nx:run-commands",
       "options": {

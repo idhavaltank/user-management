@@ -32,6 +32,7 @@ test('admin can create, refresh, search, and delete a user through the API-backe
   const listResponsePromise = page.waitForResponse(
     (response) => response.url().includes('/api/v1/organizations/') && response.url().includes('/users') && response.request().method() === 'GET'
   );
+  await page.goto(`${URLS.FRONTEND}/user`);
   await expect(page.getByRole('heading', { name: 'User Management', level: 4 })).toBeVisible();
   const listResponse = await listResponsePromise;
   expect(listResponse.status()).toBe(200);

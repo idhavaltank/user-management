@@ -477,6 +477,381 @@ class ApiKeyCreatedResponse(BaseModel):
     metadata: ApiKey
 
 
+class FlowAccountStatus(Enum):
+    prospect = 'prospect'
+    customer = 'customer'
+    inactive = 'inactive'
+
+
+class FlowContactStatus(Enum):
+    lead = 'lead'
+    active = 'active'
+    inactive = 'inactive'
+
+
+class FlowDealStage(Enum):
+    lead = 'lead'
+    qualified = 'qualified'
+    proposal = 'proposal'
+    negotiation = 'negotiation'
+    won = 'won'
+    lost = 'lost'
+
+
+class FlowActivityKind(Enum):
+    call = 'call'
+    email = 'email'
+    meeting = 'meeting'
+    task = 'task'
+    note = 'note'
+
+
+class FlowActivityStatus(Enum):
+    planned = 'planned'
+    completed = 'completed'
+    cancelled = 'cancelled'
+
+
+class CrmAccount(BaseModel):
+    id: UUID
+    organizationId: UUID
+    name: Annotated[str, Field(max_length=160, min_length=1)]
+    industry: Annotated[str | None, Field(max_length=120)] = None
+    website: Annotated[str | None, Field(max_length=500)] = None
+    phone: Annotated[str | None, Field(max_length=64)] = None
+    address: Annotated[str | None, Field(max_length=500)] = None
+    ownerId: UUID | None = None
+    status: FlowAccountStatus
+    notes: str | None = None
+    createdAt: AwareDatetime
+    updatedAt: AwareDatetime
+    profileImageUrl: str | None = None
+
+
+class CrmAccountCreateRequest(BaseModel):
+    name: Annotated[str, Field(max_length=160, min_length=1)]
+    industry: Annotated[str | None, Field(max_length=120)] = None
+    website: Annotated[str | None, Field(max_length=500)] = None
+    phone: Annotated[str | None, Field(max_length=64)] = None
+    address: Annotated[str | None, Field(max_length=500)] = None
+    ownerId: UUID | None = None
+    status: FlowAccountStatus | None = None
+    notes: str | None = None
+
+
+class CrmAccountUpdateRequest(BaseModel):
+    name: Annotated[str | None, Field(max_length=160, min_length=1)] = None
+    industry: Annotated[str | None, Field(max_length=120)] = None
+    website: Annotated[str | None, Field(max_length=500)] = None
+    phone: Annotated[str | None, Field(max_length=64)] = None
+    address: Annotated[str | None, Field(max_length=500)] = None
+    ownerId: UUID | None = None
+    status: FlowAccountStatus | None = None
+    notes: str | None = None
+
+
+class CrmAccountListResponse(BaseModel):
+    items: list[CrmAccount]
+    page: Annotated[int, Field(ge=1)]
+    pageSize: Annotated[int, Field(ge=1, le=100)]
+    total: Annotated[int, Field(ge=0)]
+
+
+class CrmContact(BaseModel):
+    id: UUID
+    organizationId: UUID
+    accountId: UUID | None = None
+    firstName: Annotated[str, Field(max_length=80, min_length=1)]
+    lastName: Annotated[str, Field(max_length=80, min_length=1)]
+    email: Annotated[EmailStr | None, Field(max_length=254)] = None
+    phone: Annotated[str | None, Field(max_length=64)] = None
+    jobTitle: Annotated[str | None, Field(max_length=160)] = None
+    ownerId: UUID | None = None
+    status: FlowContactStatus
+    notes: str | None = None
+    createdAt: AwareDatetime
+    updatedAt: AwareDatetime
+    profileImageUrl: str | None = None
+
+
+class CrmContactCreateRequest(BaseModel):
+    accountId: UUID | None = None
+    firstName: Annotated[str, Field(max_length=80, min_length=1)]
+    lastName: Annotated[str, Field(max_length=80, min_length=1)]
+    email: Annotated[EmailStr | None, Field(max_length=254)] = None
+    phone: Annotated[str | None, Field(max_length=64)] = None
+    jobTitle: Annotated[str | None, Field(max_length=160)] = None
+    ownerId: UUID | None = None
+    status: FlowContactStatus | None = None
+    notes: str | None = None
+
+
+class CrmContactUpdateRequest(BaseModel):
+    accountId: UUID | None = None
+    firstName: Annotated[str | None, Field(max_length=80, min_length=1)] = None
+    lastName: Annotated[str | None, Field(max_length=80, min_length=1)] = None
+    email: Annotated[EmailStr | None, Field(max_length=254)] = None
+    phone: Annotated[str | None, Field(max_length=64)] = None
+    jobTitle: Annotated[str | None, Field(max_length=160)] = None
+    ownerId: UUID | None = None
+    status: FlowContactStatus | None = None
+    notes: str | None = None
+
+
+class CrmContactListResponse(BaseModel):
+    items: list[CrmContact]
+    page: Annotated[int, Field(ge=1)]
+    pageSize: Annotated[int, Field(ge=1, le=100)]
+    total: Annotated[int, Field(ge=0)]
+
+
+class CrmDeal(BaseModel):
+    id: UUID
+    organizationId: UUID
+    accountId: UUID | None = None
+    contactId: UUID | None = None
+    ownerId: UUID | None = None
+    name: Annotated[str, Field(max_length=200, min_length=1)]
+    stage: FlowDealStage
+    amount: Annotated[float, Field(ge=0.0)]
+    currency: Annotated[str, Field(max_length=3, min_length=3)]
+    expectedCloseDate: date | None = None
+    notes: str | None = None
+    createdAt: AwareDatetime
+    updatedAt: AwareDatetime
+
+
+class CrmDealCreateRequest(BaseModel):
+    accountId: UUID | None = None
+    contactId: UUID | None = None
+    ownerId: UUID | None = None
+    name: Annotated[str, Field(max_length=200, min_length=1)]
+    stage: FlowDealStage | None = None
+    amount: Annotated[float | None, Field(ge=0.0)] = 0
+    currency: Annotated[str | None, Field(max_length=3, min_length=3)] = 'USD'
+    expectedCloseDate: date | None = None
+    notes: str | None = None
+
+
+class CrmDealUpdateRequest(BaseModel):
+    accountId: UUID | None = None
+    contactId: UUID | None = None
+    ownerId: UUID | None = None
+    name: Annotated[str | None, Field(max_length=200, min_length=1)] = None
+    stage: FlowDealStage | None = None
+    amount: Annotated[float | None, Field(ge=0.0)] = None
+    currency: Annotated[str | None, Field(max_length=3, min_length=3)] = None
+    expectedCloseDate: date | None = None
+    notes: str | None = None
+
+
+class CrmDealListResponse(BaseModel):
+    items: list[CrmDeal]
+    page: Annotated[int, Field(ge=1)]
+    pageSize: Annotated[int, Field(ge=1, le=100)]
+    total: Annotated[int, Field(ge=0)]
+
+
+class CrmActivity(BaseModel):
+    id: UUID
+    organizationId: UUID
+    accountId: UUID | None = None
+    contactId: UUID | None = None
+    dealId: UUID | None = None
+    ownerId: UUID | None = None
+    kind: FlowActivityKind
+    status: FlowActivityStatus
+    subject: Annotated[str, Field(max_length=200, min_length=1)]
+    description: str | None = None
+    dueAt: AwareDatetime | None = None
+    completedAt: AwareDatetime | None = None
+    createdAt: AwareDatetime
+    updatedAt: AwareDatetime
+
+
+class CrmActivityCreateRequest(BaseModel):
+    accountId: UUID | None = None
+    contactId: UUID | None = None
+    dealId: UUID | None = None
+    ownerId: UUID | None = None
+    kind: FlowActivityKind
+    status: FlowActivityStatus | None = None
+    subject: Annotated[str, Field(max_length=200, min_length=1)]
+    description: str | None = None
+    dueAt: AwareDatetime | None = None
+
+
+class CrmActivityUpdateRequest(BaseModel):
+    accountId: UUID | None = None
+    contactId: UUID | None = None
+    dealId: UUID | None = None
+    ownerId: UUID | None = None
+    kind: FlowActivityKind | None = None
+    status: FlowActivityStatus | None = None
+    subject: Annotated[str | None, Field(max_length=200, min_length=1)] = None
+    description: str | None = None
+    dueAt: AwareDatetime | None = None
+    completedAt: AwareDatetime | None = None
+
+
+class CrmActivityListResponse(BaseModel):
+    items: list[CrmActivity]
+    page: Annotated[int, Field(ge=1)]
+    pageSize: Annotated[int, Field(ge=1, le=100)]
+    total: Annotated[int, Field(ge=0)]
+
+
+class CrmPipelineStageSummary(BaseModel):
+    stage: FlowDealStage
+    count: Annotated[int, Field(ge=0)]
+    value: Annotated[float, Field(ge=0.0)]
+
+
+class CrmDashboardResponse(BaseModel):
+    totalAccounts: Annotated[int, Field(ge=0)]
+    activeAccounts: Annotated[int, Field(ge=0)]
+    totalContacts: Annotated[int, Field(ge=0)]
+    totalDeals: Annotated[int, Field(ge=0)]
+    openDeals: Annotated[int, Field(ge=0)]
+    pipelineValue: Annotated[float, Field(ge=0.0)]
+    wonValue: Annotated[float, Field(ge=0.0)]
+    upcomingActivities: Annotated[int, Field(ge=0)]
+    pipeline: list[CrmPipelineStageSummary]
+
+
+class SyncEntity(Enum):
+    accounts = 'accounts'
+    contacts = 'contacts'
+    deals = 'deals'
+    activities = 'activities'
+
+
+class SyncOperationKind(Enum):
+    upsert = 'upsert'
+    delete = 'delete'
+
+
+class SyncOperationRequest(BaseModel):
+    opId: UUID
+    deviceId: Annotated[str, Field(max_length=128, min_length=1)]
+    entity: SyncEntity
+    entityId: UUID
+    kind: SyncOperationKind
+    changes: dict[str, Any] | None = None
+    hlc: Annotated[str, Field(max_length=128, min_length=1)]
+    schemaVersion: Annotated[int, Field(ge=1, le=10)]
+
+
+class SyncPushRequest(BaseModel):
+    operations: Annotated[
+        list[SyncOperationRequest], Field(max_length=500, min_length=1)
+    ]
+
+
+class Status6(Enum):
+    accepted = 'accepted'
+    rejected = 'rejected'
+
+
+class SyncOperationAcknowledgement(BaseModel):
+    opId: UUID
+    status: Status6
+    sequence: Annotated[int | None, Field(ge=1)] = None
+    error: Annotated[str | None, Field(max_length=500)] = None
+
+
+class SyncPushResponse(BaseModel):
+    acknowledgements: list[SyncOperationAcknowledgement]
+    nextCursor: Annotated[int, Field(ge=0)]
+
+
+class SyncChange(BaseModel):
+    sequence: Annotated[int, Field(ge=1)]
+    opId: UUID
+    deviceId: str
+    entity: SyncEntity
+    entityId: UUID
+    kind: SyncOperationKind
+    changes: dict[str, Any] | None = None
+    hlc: str
+    schemaVersion: int
+    occurredAt: AwareDatetime
+
+
+class SyncPullResponse(BaseModel):
+    changes: list[SyncChange]
+    nextCursor: Annotated[int, Field(ge=0)]
+    hasMore: bool
+
+
+class SyncStatusResponse(BaseModel):
+    latestSequence: Annotated[int, Field(ge=0)]
+
+
+class Status7(Enum):
+    open = 'open'
+    resolved = 'resolved'
+
+
+class SyncConflict(BaseModel):
+    id: UUID
+    organizationId: UUID
+    entity: SyncEntity
+    entityId: UUID
+    field: str
+    localValue: Any | None = None
+    remoteValue: Any | None = None
+    localHlc: str
+    remoteHlc: str
+    remoteDeviceId: str
+    status: Status7
+    resolutionOperationId: UUID | None = None
+    resolutionNote: str | None = None
+    createdAt: AwareDatetime
+    resolvedAt: AwareDatetime | None = None
+
+
+class SyncConflictListResponse(BaseModel):
+    items: list[SyncConflict]
+
+
+class Choice(Enum):
+    mine = 'mine'
+    theirs = 'theirs'
+    custom = 'custom'
+
+
+class SyncConflictResolutionRequest(BaseModel):
+    choice: Choice
+    value: Any | None = None
+    deviceId: Annotated[str, Field(max_length=128, min_length=1)]
+    hlc: Annotated[str, Field(max_length=128, min_length=1)]
+    note: Annotated[str | None, Field(max_length=500)] = None
+
+
+class Status8(Enum):
+    accepted = 'accepted'
+    rejected = 'rejected'
+
+
+class SyncHistoryItem(BaseModel):
+    sequence: Annotated[int, Field(ge=1)]
+    opId: UUID
+    deviceId: str
+    entity: SyncEntity
+    entityId: UUID
+    kind: SyncOperationKind
+    changes: dict[str, Any]
+    hlc: str
+    schemaVersion: int
+    occurredAt: AwareDatetime
+    status: Status8
+
+
+class SyncHistoryResponse(BaseModel):
+    items: list[SyncHistoryItem]
+
+
 class DashboardResponse(BaseModel):
     totalUsers: Annotated[int, Field(ge=0)]
     activeUsers: Annotated[int, Field(ge=0)]

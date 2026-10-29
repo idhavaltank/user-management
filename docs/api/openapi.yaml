@@ -1,8 +1,8 @@
 openapi: 3.1.0
 info:
-  title: User Management API
+  title: FlowSync CRM API
   version: 1.0.0
-  description: Contract-first API for the user management application.
+  description: Contract-first API for the FlowSync CRM product.
 servers:
   - url: http://localhost:8000
     description: Local development
@@ -17,6 +17,7 @@ tags:
   - name: Notifications
   - name: Jobs
   - name: Integrations
+  - name: CRM
 paths:
   /health:
     get:
@@ -693,6 +694,751 @@ paths:
           $ref: "#/components/responses/NotFound"
         "429":
           $ref: "#/components/responses/TooManyRequests"
+
+  /api/v1/organizations/{organizationId}/crm/dashboard:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [CRM]
+      operationId: getCrmDashboard
+      summary: Return FlowSync CRM dashboard metrics for one organization
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: CRM dashboard metrics
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmDashboardResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+
+  /api/v1/organizations/{organizationId}/accounts:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [CRM]
+      operationId: listCrmAccounts
+      summary: List organization accounts
+      security:
+        - sessionCookie: []
+          apiKey: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/Search"
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/FlowAccountStatus"
+      responses:
+        "200":
+          description: Paginated account list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmAccountListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+    post:
+      tags: [CRM]
+      operationId: createCrmAccount
+      summary: Create an organization account
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CrmAccountCreateRequest"
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmAccount"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/organizations/{organizationId}/accounts/{accountId}:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [CRM]
+      operationId: getCrmAccount
+      summary: Get one organization account
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: Account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmAccount"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [CRM]
+      operationId: updateCrmAccount
+      summary: Update one organization account
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CrmAccountUpdateRequest"
+      responses:
+        "200":
+          description: Account updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmAccount"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [CRM]
+      operationId: deleteCrmAccount
+      summary: Delete one organization account
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "204":
+          description: Account deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/organizations/{organizationId}/contacts:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [CRM]
+      operationId: listCrmContacts
+      summary: List organization contacts
+      security:
+        - sessionCookie: []
+          apiKey: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/Search"
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/FlowContactStatus"
+      responses:
+        "200":
+          description: Paginated contact list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmContactListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+    post:
+      tags: [CRM]
+      operationId: createCrmContact
+      summary: Create an organization contact
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CrmContactCreateRequest"
+      responses:
+        "201":
+          description: Contact created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmContact"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/organizations/{organizationId}/contacts/{contactId}:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - name: contactId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [CRM]
+      operationId: getCrmContact
+      summary: Get one organization contact
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: Contact
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmContact"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [CRM]
+      operationId: updateCrmContact
+      summary: Update one organization contact
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CrmContactUpdateRequest"
+      responses:
+        "200":
+          description: Contact updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmContact"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [CRM]
+      operationId: deleteCrmContact
+      summary: Delete one organization contact
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "204":
+          description: Contact deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/organizations/{organizationId}/deals:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [CRM]
+      operationId: listCrmDeals
+      summary: List organization deals
+      security:
+        - sessionCookie: []
+          apiKey: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/Search"
+        - name: stage
+          in: query
+          schema:
+            $ref: "#/components/schemas/FlowDealStage"
+      responses:
+        "200":
+          description: Paginated deal list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmDealListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+    post:
+      tags: [CRM]
+      operationId: createCrmDeal
+      summary: Create an organization deal
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CrmDealCreateRequest"
+      responses:
+        "201":
+          description: Deal created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmDeal"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/organizations/{organizationId}/deals/{dealId}:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - name: dealId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [CRM]
+      operationId: getCrmDeal
+      summary: Get one organization deal
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: Deal
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmDeal"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [CRM]
+      operationId: updateCrmDeal
+      summary: Update one organization deal
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CrmDealUpdateRequest"
+      responses:
+        "200":
+          description: Deal updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmDeal"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [CRM]
+      operationId: deleteCrmDeal
+      summary: Delete one organization deal
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "204":
+          description: Deal deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/organizations/{organizationId}/activities:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [CRM]
+      operationId: listCrmActivities
+      summary: List organization activities
+      security:
+        - sessionCookie: []
+          apiKey: []
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+        - $ref: "#/components/parameters/Search"
+        - name: status
+          in: query
+          schema:
+            $ref: "#/components/schemas/FlowActivityStatus"
+      responses:
+        "200":
+          description: Paginated activity list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmActivityListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "429":
+          $ref: "#/components/responses/TooManyRequests"
+    post:
+      tags: [CRM]
+      operationId: createCrmActivity
+      summary: Create an organization activity
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CrmActivityCreateRequest"
+      responses:
+        "201":
+          description: Activity created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmActivity"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/organizations/{organizationId}/activities/{activityId}:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - name: activityId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [CRM]
+      operationId: getCrmActivity
+      summary: Get one organization activity
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: Activity
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmActivity"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    patch:
+      tags: [CRM]
+      operationId: updateCrmActivity
+      summary: Update one organization activity
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CrmActivityUpdateRequest"
+      responses:
+        "200":
+          description: Activity updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmActivity"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    delete:
+      tags: [CRM]
+      operationId: deleteCrmActivity
+      summary: Delete one organization activity
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "204":
+          description: Activity deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/organizations/{organizationId}/sync/push:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    post:
+      tags: [Sync]
+      operationId: pushSyncOperations
+      summary: Push a bounded batch of offline operations
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SyncPushRequest"
+      responses:
+        "200":
+          description: Per-operation acknowledgements
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncPushResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /api/v1/organizations/{organizationId}/sync/pull:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Sync]
+      operationId: pullSyncOperations
+      summary: Pull accepted operations after a server cursor
+      security:
+        - sessionCookie: []
+          apiKey: []
+      parameters:
+        - name: cursor
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+        - name: limit
+          in: query
+          required: false
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 500
+            default: 200
+      responses:
+        "200":
+          description: Cursor page of accepted operations
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncPullResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/organizations/{organizationId}/sync/status:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Sync]
+      operationId: getSyncStatus
+      summary: Read the current server sync sequence
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: Sync status
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncStatusResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/organizations/{organizationId}/sync/conflicts:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+    get:
+      tags: [Sync]
+      operationId: listSyncConflicts
+      summary: List unresolved or resolved sync conflicts
+      security:
+        - sessionCookie: []
+          apiKey: []
+      parameters:
+        - name: status
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [open, resolved]
+            default: open
+      responses:
+        "200":
+          description: Conflict list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncConflictListResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+
+  /api/v1/organizations/{organizationId}/sync/conflicts/{conflictId}/resolve:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - name: conflictId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [Sync]
+      operationId: resolveSyncConflict
+      summary: Resolve a conflict by creating a new sync operation
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SyncConflictResolutionRequest"
+      responses:
+        "200":
+          description: Resolved conflict
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncConflict"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "409":
+          $ref: "#/components/responses/Conflict"
+
+  /api/v1/organizations/{organizationId}/sync/history/{entity}/{entityId}:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - name: entity
+        in: path
+        required: true
+        schema:
+          $ref: "#/components/schemas/SyncEntity"
+      - name: entityId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    get:
+      tags: [Sync]
+      operationId: listSyncHistory
+      summary: List the operation history for one CRM record
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: Operation history
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncHistoryResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
 
   /api/v1/organizations/{organizationId}/users/{userId}/activity:
     parameters:
@@ -2532,6 +3278,186 @@ paths:
         "500":
           $ref: "#/components/responses/InternalError"
 
+  /api/v1/organizations/{organizationId}/accounts/{accountId}/profile-image:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - name: accountId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [CRM]
+      operationId: uploadAccountProfileImage
+      summary: Upload or replace an account profile image
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Updated account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmAccount"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    get:
+      tags: [CRM]
+      operationId: getAccountProfileImage
+      summary: Get an account profile image
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: Account profile image
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [CRM]
+      operationId: deleteAccountProfileImage
+      summary: Delete an account profile image
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "204":
+          description: Account profile image deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /api/v1/organizations/{organizationId}/contacts/{contactId}/profile-image:
+    parameters:
+      - $ref: "#/components/parameters/OrganizationId"
+      - name: contactId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+    post:
+      tags: [CRM]
+      operationId: uploadContactProfileImage
+      summary: Upload or replace a contact profile image
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        "200":
+          description: Updated contact
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CrmContact"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+        "413":
+          $ref: "#/components/responses/PayloadTooLarge"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+    get:
+      tags: [CRM]
+      operationId: getContactProfileImage
+      summary: Get a contact profile image
+      security:
+        - sessionCookie: []
+          apiKey: []
+      responses:
+        "200":
+          description: Contact profile image
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            image/webp:
+              schema:
+                type: string
+                format: binary
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+    delete:
+      tags: [CRM]
+      operationId: deleteContactProfileImage
+      summary: Delete a contact profile image
+      security:
+        - sessionCookie: []
+          csrfToken: []
+      responses:
+        "204":
+          description: Contact profile image deleted
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+        "403":
+          $ref: "#/components/responses/Forbidden"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
 components:
   securitySchemes:
     sessionCookie:
@@ -3839,6 +4765,888 @@ components:
           description: Raw API key returned exactly once and never persisted in plaintext.
         metadata:
           $ref: "#/components/schemas/ApiKey"
+
+    FlowAccountStatus:
+      type: string
+      enum: [prospect, customer, inactive]
+
+    FlowContactStatus:
+      type: string
+      enum: [lead, active, inactive]
+
+    FlowDealStage:
+      type: string
+      enum: [lead, qualified, proposal, negotiation, won, lost]
+
+    FlowActivityKind:
+      type: string
+      enum: [call, email, meeting, task, note]
+
+    FlowActivityStatus:
+      type: string
+      enum: [planned, completed, cancelled]
+
+    CrmAccount:
+      type: object
+      required: [id, organizationId, name, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        industry:
+          type: string
+          maxLength: 120
+          nullable: true
+        website:
+          type: string
+          maxLength: 500
+          nullable: true
+        phone:
+          type: string
+          maxLength: 64
+          nullable: true
+        address:
+          type: string
+          maxLength: 500
+          nullable: true
+        ownerId:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          $ref: "#/components/schemas/FlowAccountStatus"
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        profileImageUrl:
+          type: string
+          format: uri-reference
+          nullable: true
+
+    CrmAccountCreateRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        industry:
+          type: string
+          maxLength: 120
+        website:
+          type: string
+          maxLength: 500
+        phone:
+          type: string
+          maxLength: 64
+        address:
+          type: string
+          maxLength: 500
+        ownerId:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/FlowAccountStatus"
+        notes:
+          type: string
+
+    CrmAccountUpdateRequest:
+      type: object
+      minProperties: 1
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 160
+        industry:
+          type: string
+          maxLength: 120
+          nullable: true
+        website:
+          type: string
+          maxLength: 500
+          nullable: true
+        phone:
+          type: string
+          maxLength: 64
+          nullable: true
+        address:
+          type: string
+          maxLength: 500
+          nullable: true
+        ownerId:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          $ref: "#/components/schemas/FlowAccountStatus"
+        notes:
+          type: string
+          nullable: true
+
+    CrmAccountListResponse:
+      type: object
+      required: [items, page, pageSize, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CrmAccount"
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+
+    CrmContact:
+      type: object
+      required: [id, organizationId, firstName, lastName, status, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+          nullable: true
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 80
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 80
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          nullable: true
+        phone:
+          type: string
+          maxLength: 64
+          nullable: true
+        jobTitle:
+          type: string
+          maxLength: 160
+          nullable: true
+        ownerId:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          $ref: "#/components/schemas/FlowContactStatus"
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+        profileImageUrl:
+          type: string
+          format: uri-reference
+          nullable: true
+
+    CrmContactCreateRequest:
+      type: object
+      required: [firstName, lastName]
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 80
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 80
+        email:
+          type: string
+          format: email
+          maxLength: 254
+        phone:
+          type: string
+          maxLength: 64
+        jobTitle:
+          type: string
+          maxLength: 160
+        ownerId:
+          type: string
+          format: uuid
+        status:
+          $ref: "#/components/schemas/FlowContactStatus"
+        notes:
+          type: string
+
+    CrmContactUpdateRequest:
+      type: object
+      minProperties: 1
+      properties:
+        accountId:
+          type: string
+          format: uuid
+          nullable: true
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 80
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 80
+        email:
+          type: string
+          format: email
+          maxLength: 254
+          nullable: true
+        phone:
+          type: string
+          maxLength: 64
+          nullable: true
+        jobTitle:
+          type: string
+          maxLength: 160
+          nullable: true
+        ownerId:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          $ref: "#/components/schemas/FlowContactStatus"
+        notes:
+          type: string
+          nullable: true
+
+    CrmContactListResponse:
+      type: object
+      required: [items, page, pageSize, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CrmContact"
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+
+    CrmDeal:
+      type: object
+      required: [id, organizationId, name, stage, amount, currency, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+          nullable: true
+        contactId:
+          type: string
+          format: uuid
+          nullable: true
+        ownerId:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        stage:
+          $ref: "#/components/schemas/FlowDealStage"
+        amount:
+          type: number
+          format: double
+          minimum: 0
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        expectedCloseDate:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CrmDealCreateRequest:
+      type: object
+      required: [name]
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        contactId:
+          type: string
+          format: uuid
+        ownerId:
+          type: string
+          format: uuid
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        stage:
+          $ref: "#/components/schemas/FlowDealStage"
+        amount:
+          type: number
+          format: double
+          minimum: 0
+          default: 0
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+          default: USD
+        expectedCloseDate:
+          type: string
+          format: date
+        notes:
+          type: string
+
+    CrmDealUpdateRequest:
+      type: object
+      minProperties: 1
+      properties:
+        accountId:
+          type: string
+          format: uuid
+          nullable: true
+        contactId:
+          type: string
+          format: uuid
+          nullable: true
+        ownerId:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+          minLength: 1
+          maxLength: 200
+        stage:
+          $ref: "#/components/schemas/FlowDealStage"
+        amount:
+          type: number
+          format: double
+          minimum: 0
+        currency:
+          type: string
+          minLength: 3
+          maxLength: 3
+        expectedCloseDate:
+          type: string
+          format: date
+          nullable: true
+        notes:
+          type: string
+          nullable: true
+
+    CrmDealListResponse:
+      type: object
+      required: [items, page, pageSize, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CrmDeal"
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+
+    CrmActivity:
+      type: object
+      required: [id, organizationId, kind, status, subject, createdAt, updatedAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+          format: uuid
+        accountId:
+          type: string
+          format: uuid
+          nullable: true
+        contactId:
+          type: string
+          format: uuid
+          nullable: true
+        dealId:
+          type: string
+          format: uuid
+          nullable: true
+        ownerId:
+          type: string
+          format: uuid
+          nullable: true
+        kind:
+          $ref: "#/components/schemas/FlowActivityKind"
+        status:
+          $ref: "#/components/schemas/FlowActivityStatus"
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+        dueAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CrmActivityCreateRequest:
+      type: object
+      required: [kind, subject]
+      properties:
+        accountId:
+          type: string
+          format: uuid
+        contactId:
+          type: string
+          format: uuid
+        dealId:
+          type: string
+          format: uuid
+        ownerId:
+          type: string
+          format: uuid
+        kind:
+          $ref: "#/components/schemas/FlowActivityKind"
+        status:
+          $ref: "#/components/schemas/FlowActivityStatus"
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+        dueAt:
+          type: string
+          format: date-time
+
+    CrmActivityUpdateRequest:
+      type: object
+      minProperties: 1
+      properties:
+        accountId:
+          type: string
+          format: uuid
+          nullable: true
+        contactId:
+          type: string
+          format: uuid
+          nullable: true
+        dealId:
+          type: string
+          format: uuid
+          nullable: true
+        ownerId:
+          type: string
+          format: uuid
+          nullable: true
+        kind:
+          $ref: "#/components/schemas/FlowActivityKind"
+        status:
+          $ref: "#/components/schemas/FlowActivityStatus"
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 200
+        description:
+          type: string
+          nullable: true
+        dueAt:
+          type: string
+          format: date-time
+          nullable: true
+        completedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    CrmActivityListResponse:
+      type: object
+      required: [items, page, pageSize, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/CrmActivity"
+        page:
+          type: integer
+          minimum: 1
+        pageSize:
+          type: integer
+          minimum: 1
+          maximum: 100
+        total:
+          type: integer
+          minimum: 0
+
+    CrmPipelineStageSummary:
+      type: object
+      required: [stage, count, value]
+      properties:
+        stage:
+          $ref: "#/components/schemas/FlowDealStage"
+        count:
+          type: integer
+          minimum: 0
+        value:
+          type: number
+          format: double
+          minimum: 0
+
+    CrmDashboardResponse:
+      type: object
+      required:
+        [totalAccounts, activeAccounts, totalContacts, totalDeals, openDeals, pipelineValue, wonValue, upcomingActivities, pipeline]
+      properties:
+        totalAccounts:
+          type: integer
+          minimum: 0
+        activeAccounts:
+          type: integer
+          minimum: 0
+        totalContacts:
+          type: integer
+          minimum: 0
+        totalDeals:
+          type: integer
+          minimum: 0
+        openDeals:
+          type: integer
+          minimum: 0
+        pipelineValue:
+          type: number
+          format: double
+          minimum: 0
+        wonValue:
+          type: number
+          format: double
+          minimum: 0
+        upcomingActivities:
+          type: integer
+          minimum: 0
+        pipeline:
+          type: array
+          items:
+            $ref: "#/components/schemas/CrmPipelineStageSummary"
+
+    SyncEntity:
+      type: string
+      enum: [accounts, contacts, deals, activities]
+
+    SyncOperationKind:
+      type: string
+      enum: [upsert, delete]
+
+    SyncOperationRequest:
+      type: object
+      required: [opId, deviceId, entity, entityId, kind, schemaVersion, hlc]
+      properties:
+        opId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        entity:
+          $ref: "#/components/schemas/SyncEntity"
+        entityId:
+          type: string
+          format: uuid
+        kind:
+          $ref: "#/components/schemas/SyncOperationKind"
+        changes:
+          type: object
+          nullable: true
+          additionalProperties: true
+        hlc:
+          type: string
+          minLength: 1
+          maxLength: 128
+        schemaVersion:
+          type: integer
+          minimum: 1
+          maximum: 10
+
+    SyncPushRequest:
+      type: object
+      required: [operations]
+      properties:
+        operations:
+          type: array
+          minItems: 1
+          maxItems: 500
+          items:
+            $ref: "#/components/schemas/SyncOperationRequest"
+
+    SyncOperationAcknowledgement:
+      type: object
+      required: [opId, status]
+      properties:
+        opId:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [accepted, rejected]
+        sequence:
+          type: integer
+          minimum: 1
+          nullable: true
+        error:
+          type: string
+          maxLength: 500
+          nullable: true
+
+    SyncPushResponse:
+      type: object
+      required: [acknowledgements, nextCursor]
+      properties:
+        acknowledgements:
+          type: array
+          items:
+            $ref: "#/components/schemas/SyncOperationAcknowledgement"
+        nextCursor:
+          type: integer
+          minimum: 0
+
+    SyncChange:
+      type: object
+      required: [sequence, opId, deviceId, entity, entityId, kind, schemaVersion, hlc, occurredAt]
+      properties:
+        sequence:
+          type: integer
+          minimum: 1
+        opId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+        entity:
+          $ref: "#/components/schemas/SyncEntity"
+        entityId:
+          type: string
+          format: uuid
+        kind:
+          $ref: "#/components/schemas/SyncOperationKind"
+        changes:
+          type: object
+          nullable: true
+          additionalProperties: true
+        hlc:
+          type: string
+        schemaVersion:
+          type: integer
+        occurredAt:
+          type: string
+          format: date-time
+
+    SyncPullResponse:
+      type: object
+      required: [changes, nextCursor, hasMore]
+      properties:
+        changes:
+          type: array
+          items:
+            $ref: "#/components/schemas/SyncChange"
+        nextCursor:
+          type: integer
+          minimum: 0
+        hasMore:
+          type: boolean
+
+    SyncStatusResponse:
+      type: object
+      required: [latestSequence]
+      properties:
+        latestSequence:
+          type: integer
+          minimum: 0
+
+    SyncConflict:
+      type: object
+      required: [id, organizationId, entity, entityId, field, localHlc, remoteHlc, remoteDeviceId, status, createdAt]
+      properties:
+        id:
+          type: string
+          format: uuid
+        organizationId:
+          type: string
+          format: uuid
+        entity:
+          $ref: "#/components/schemas/SyncEntity"
+        entityId:
+          type: string
+          format: uuid
+        field:
+          type: string
+        localValue:
+          nullable: true
+        remoteValue:
+          nullable: true
+        localHlc:
+          type: string
+        remoteHlc:
+          type: string
+        remoteDeviceId:
+          type: string
+        status:
+          type: string
+          enum: [open, resolved]
+        resolutionOperationId:
+          type: string
+          format: uuid
+          nullable: true
+        resolutionNote:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+        resolvedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    SyncConflictListResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SyncConflict"
+
+    SyncConflictResolutionRequest:
+      type: object
+      required: [choice, deviceId, hlc]
+      properties:
+        choice:
+          type: string
+          enum: [mine, theirs, custom]
+        value:
+          nullable: true
+        deviceId:
+          type: string
+          minLength: 1
+          maxLength: 128
+        hlc:
+          type: string
+          minLength: 1
+          maxLength: 128
+        note:
+          type: string
+          maxLength: 500
+
+    SyncHistoryItem:
+      type: object
+      required: [sequence, opId, deviceId, entity, entityId, kind, changes, hlc, schemaVersion, occurredAt, status]
+      properties:
+        sequence:
+          type: integer
+          minimum: 1
+        opId:
+          type: string
+          format: uuid
+        deviceId:
+          type: string
+        entity:
+          $ref: "#/components/schemas/SyncEntity"
+        entityId:
+          type: string
+          format: uuid
+        kind:
+          $ref: "#/components/schemas/SyncOperationKind"
+        changes:
+          type: object
+          nullable: true
+          additionalProperties: true
+        hlc:
+          type: string
+        schemaVersion:
+          type: integer
+        occurredAt:
+          type: string
+          format: date-time
+        status:
+          type: string
+          enum: [accepted, rejected]
+
+    SyncHistoryResponse:
+      type: object
+      required: [items]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/SyncHistoryItem"
 
     DashboardResponse:
       type: object

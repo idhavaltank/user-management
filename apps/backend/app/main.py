@@ -19,14 +19,19 @@ from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
 from starlette.exceptions import HTTPException as StarletteHTTPException
 from starlette.middleware.trustedhost import TrustedHostMiddleware
+from starlette.responses import Response
 
 from app.api.auth import router as auth_router
+from app.api.conflicts import router as conflicts_router
+from app.api.crm import router as crm_router
+from app.api.crm_media import router as crm_media_router
 from app.api.health import router as health_router
 from app.api.jobs import router as jobs_router
 from app.api.organization_features import router as organization_features_router
 from app.api.organization_users import router as organization_users_router
 from app.api.organizations import router as organizations_router
 from app.api.security_features import router as security_features_router
+from app.api.sync import router as sync_router
 from app.api.users import router as users_router
 from app.core.bootstrap import ensure_bootstrap_admin
 from app.core.config import Settings, get_settings
@@ -36,6 +41,7 @@ from app.core.logging import configure_logging
 from app.core.rate_limit import RateLimitMiddleware, RedisRateLimitStore
 from app.core.request_id import RequestIdMiddleware
 from app.core.telemetry import LoggingTelemetry, Telemetry
+from app.services.media import LocalProfileImageStorage
 
 DatabaseCheck = Callable[[], Awaitable[bool]]
 
@@ -132,6 +138,7 @@ def create_app(
     # sink; non-local environments fail closed until a provider adapter is
     # configured instead of silently dropping security messages.
     app.state.delivery = create_delivery_adapter(app_settings)
+    app.state.profile_image_storage = LocalProfileImageStorage(app_settings.media_storage_path)
 
     # Convert FastAPI/Starlette HTTP errors into the documented error shape.
     @app.exception_handler(StarletteHTTPException)
@@ -185,6 +192,27 @@ def create_app(
             content=_error_payload(request, "internal_server_error", "An internal error occurred."),
         )
 
+    @app.middleware("http")
+    async def security_headers(request: Request, call_next) -> Response:
+        """Apply safe browser defaults to every API response."""
+
+        response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+        response.headers.setdefault(
+            "Permissions-Policy", "camera=(), microphone=(), geolocation=()"
+        )
+        if app_settings.environment == "production":
+            response.headers.setdefault(
+                "Content-Security-Policy",
+                "default-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'",
+            )
+            response.headers.setdefault(
+                "Strict-Transport-Security", "max-age=31536000; includeSubDomains"
+            )
+        return response
+
     # Middleware is registered here so every router gets the same host, rate,
     # correlation, and browser-origin protections.
     app.add_middleware(
@@ -215,6 +243,10 @@ def create_app(
     app.include_router(health_router)
     app.include_router(auth_router)
     app.include_router(users_router)
+    app.include_router(crm_router)
+    app.include_router(crm_media_router)
+    app.include_router(sync_router)
+    app.include_router(conflicts_router)
     app.include_router(organization_users_router)
     app.include_router(organizations_router)
     app.include_router(organization_features_router)
